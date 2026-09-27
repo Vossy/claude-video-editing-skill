@@ -39,6 +39,10 @@ Create Video renders the avatar speaking the script (or the audio) with the chos
 | `avatarTransitions` | array of strings | Optional. Transition overlays played over each **cut between avatar clips**: `Transition01` … `Transition20`, or `["None"]` (default) for hard cuts. Pass several and one is drawn at random per cut, never repeating back-to-back. Each brings its own whoosh, mixed at the project's Sound Effects volume. Unknown ids → rejected. Only takes effect when the render produces **2+ clips** — that means avatar angles, but **also** a no-angle script long enough to be split at the model's per-request window. |
 | `avatarInputMode` | string enum | `script` \| `audio`. |
 | `avatarAudioUrl` | string or `null` | Required (non-empty) when `avatarInputMode` is `audio`. |
+| `avatarCropX` | number | Avatar preview position X, **clamped 0–100** (50 = centered). Pans the object-cover crop; in a **16:9** project with a portrait/square avatar it instead positions the letterboxed avatar horizontally on the canvas (0 = left, 100 = right). |
+| `avatarCropY` | number | Avatar preview position Y, **clamped 0–100** (50 = centered). Pans the object-cover crop vertically; unused in the 16:9 letterbox case. |
+
+**Crop recentring:** changing `avatarImage` resets both crop values to `50` (pan belongs to a specific image shape, mirroring the Avatar panel) — unless the **same** patch also sets `avatarCropX` / `avatarCropY`. To keep a framing across an image swap, send the image and the crop values together.
 
 **Persistence oracle** — confirm via `read_project_settings` → `AVATAR_SETTINGS`:
 
@@ -53,6 +57,8 @@ Create Video renders the avatar speaking the script (or the audio) with the chos
 | `avatarTransitions` | `avatar_transitions` (JSON array string) |
 | `avatarInputMode` | `avatar_input_mode` |
 | `avatarAudioUrl` | `avatar_audio_url` |
+| `avatarCropX` | `avatar_crop_x` (stored as a string, e.g. `"50"`) |
+| `avatarCropY` | `avatar_crop_y` (stored as a string, e.g. `"50"`) |
 
 ### Project-specific media helpers
 
@@ -96,8 +102,8 @@ For project type `avatar`, the **PromptBar** (`set_user_instructions` → `UI_SE
 
 1. **Resolve project** per **SKILL.md** → *Project targeting rules*. Create only with explicit approval via `create_project` with `projectType: "avatar"`.
 2. **Read state** (optional): `read_project_settings` → inspect `AVATAR_SETTINGS` and confirm `projectType`.
-3. **Avatar image** — `select_avatar_image` (local path) or `save_avatar_image` (data URL). To **generate** a portrait headlessly (same models as the **Avatar Creator** modal), use **`generate_images`** with `imageModel: "gpt-image-2"` or `"nano-banana-2"` and matching **`imageQuality`** (`low` / `medium` / `high` for GPT Image 2; `1k` / `2k` / `4k` for Nano Banana 2), then `save_avatar_image` or `select_avatar_image` on the returned path. For path-only updates, set `avatarImage` via `set_avatar_settings`.
-   - **Same face from a photo (face references)** — to generate an avatar that must look like a **specific person**, pass up to **3** face photos to `generate_images` via **`referenceImages`** (absolute local paths, http(s) / data / `local-resource://` URLs). With ≥1 reference the same face/identity is preserved (Nano Banana → `image_urls`; GPT Image 2 → OpenAI image edits) and `description` is treated as the **scene**, so describe pose/clothing/lighting/background rather than re-describing the face. This is the headless equivalent of the Avatar Creator modal's **"Face reference photos (optional)"** picker.
+3. **Avatar image** — `select_avatar_image` (local path) or `save_avatar_image` (data URL). To **generate** a portrait headlessly (same models as the **Avatar Creator** modal), use **`generate_images`** with `imageModel: "gpt-image-2"` or `"nano-banana-2"` and matching **`imageQuality`** (`low` / `medium` / `high` for GPT Image 2.5; `1k` / `2k` / `4k` for Nano Banana 2), then `save_avatar_image` or `select_avatar_image` on the returned path. For path-only updates, set `avatarImage` via `set_avatar_settings`.
+   - **Same face from a photo (face references)** — to generate an avatar that must look like a **specific person**, pass up to **3** face photos to `generate_images` via **`referenceImages`** (absolute local paths, http(s) / data / `local-resource://` URLs). With ≥1 reference the same face/identity is preserved (Nano Banana → `image_urls`; GPT Image 2.5 → OpenAI image edits) and `description` is treated as the **scene**, so describe pose/clothing/lighting/background rather than re-describing the face. This is the headless equivalent of the Avatar Creator modal's **"Face reference photos (optional)"** picker.
 4. **Avatar angles (optional)** — once `avatarImage` is set, add up to 3 same-avatar angles: `select_avatar_angle_image` per local file, or set the full `avatarAngleImages` array via `set_avatar_settings` for paths/URLs already on disk. With angles present, the render splits the script into sentences and varies the angle per sentence.
 5. **Voice and motion** — patch `avatarVoice` and `avatarMotionInstructions` with `set_avatar_settings`. Use `list_elevenlabs_voices` if the user did not name a voice.
 6. **Script or audio**:

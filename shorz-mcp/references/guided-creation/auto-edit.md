@@ -38,7 +38,7 @@ Lead with whatever the platform they named implies; fall back to source orientat
 ### Q4 — Extra material (batch these three independent questions in ONE call)
 **B-roll?** 1. **None — main footage only** (Rec) · 2. My own b-roll files (videos+images, free) · 3. Auto GIFs (free) / auto web images (**free only inside a free run** — on credits the image search is a billed proxy call) · 4. AI-generated b-roll (**paid**)
 **Sound effects?** 1. **None** (Rec) · 2. Auto SoundFX — bundled sounds, free · 3. My own SFX files (auto-placed by AI) — **omit options 2 and 3 entirely when the footage has no speech track**; placement is transcript-driven and silently does nothing without one
-**Music?** 1. **None** (Rec if footage has dialogue) · 2. My own track(s) — free, unlimited, enables beat-sync + arrangement · 3. Auto-music, AI-generated (**paid**, cannot beat-sync)
+**Music?** 1. **None** (Rec if footage has dialogue) · 2. My own track(s) — free, unlimited, enables beat-sync + arrangement, plays through once at its imported length (match the total to the video length for full coverage) · 3. Auto-music, AI-generated (**paid**, cannot beat-sync, but always covers the full runtime — it loops past 5 min with a 5s crossfade)
 
 IF own music → one follow-up: play under video (rec) / **cut the edit to the beat** / music only, mute clips / custom order-section-fades. Beat sync is mutually exclusive with speed, loop, silence-removal and filler-word removal — suppress those in Q6 if chosen.
 
@@ -76,7 +76,7 @@ Drop options 2 and 3 entirely for photos-only or silent footage rather than offe
 ### Q9 — Polish (multi-select, default none)
 1. **None** (Rec) · 2. Auto Zoom on key moments (Intelligent, count 1–30, strength 1–2) — **transcript-driven, so a no-op on silent or photos-only footage; do not offer it there**; out-of-range values are **rejected with an error**, unlike clip count which clamps silently · 3. Animated border (width 1–100; 9 animations plus None) · 4. Overlay film effects (**multi-select**, not one)
 
-Under "Other": face tracking, freeze frame, dramatic grayscale, color grading, audio visualization (10 styles), reverb (9 presets plus None — "Studio Clean" is currently a passthrough), dubbing (**paid**, 29 languages), noise removal (**paid**).
+Under "Other": face tracking, freeze frame, dramatic grayscale, color grading, audio visualization (10 styles), reverb (9 presets plus None — "Studio Clean" is currently a passthrough), dubbing (**paid**, 108 Dubbing v2 languages incl. dialects), noise removal (**paid**).
 
 ## Brief composition (the critical step)
 

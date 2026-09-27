@@ -1,8 +1,8 @@
 # Single-asset edit tools (headless MCP)
 
-Use these when the user wants **deterministic edits on local video or image files** — trim, crop, resize, letterbox, rotate, speed, volume, fades, audio extract/replace, concat, and probe metadata. One tool, `edit_image_with_ai`, is the exception — it calls GPT Image 2 and spends Shorz credits, everything else here is instant and free (FFmpeg/PIL only).
+Use these when the user wants **deterministic edits on local video or image files** — trim, crop, resize, letterbox, rotate, speed, volume, fades, audio extract/replace, concat, and probe metadata. One tool, `edit_image_with_ai`, is the exception — it calls GPT Image 2.5 and spends Shorz credits, everything else here is instant and free (FFmpeg/PIL only).
 
-**Async exceptions:** `edit_image_with_ai` (paid GPT Image 2 call) and `remove_silence` (two-pass FFmpeg over possibly long talking-head footage) are **async by default**: they return `{ started, jobId }` immediately — poll `get_job_status { jobId }` until `lastStatus` is `completed` (`result` carries the usual `{ success, outputPath, summary }`, and `outputPaths` lists the file) or `error`. Pass `awaitCompletion: true` for the old blocking form on small files. Never re-call either tool because a poll seems slow — the job is still running (and `edit_image_with_ai` would bill again). All other tools in this family stay synchronous.
+**Async exceptions:** `edit_image_with_ai` (paid GPT Image 2.5 call) and `remove_silence` (two-pass FFmpeg over possibly long talking-head footage) are **async by default**: they return `{ started, jobId }` immediately — poll `get_job_status { jobId }` until `lastStatus` is `completed` (`result` carries the usual `{ success, outputPath, summary }`, and `outputPaths` lists the file) or `error`. Pass `awaitCompletion: true` for the old blocking form on small files. Never re-call either tool because a poll seems slow — the job is still running (and `edit_image_with_ai` would bill again). All other tools in this family stay synchronous.
 
 ## Not a project type
 
@@ -50,6 +50,7 @@ All tools share:
 | Tool | Purpose | Key params (besides `inputPath` / `outputPath`) |
 |---|---|---|
 | `trim_video` | Keep a time range | `startTimeSec`, `endTimeSec` |
+| `remove_ranges` | Cut out one or more time ranges and keep the rest, in order (video or audio) | `ranges` — array of `[startSec, endSec]` pairs; overlapping pairs are merged, pairs past the end are clamped |
 | `remove_audio` | Mute / strip audio | — |
 | `set_audio_volume` | Volume multiplier | `volumeFactor` (0–10; 1 = original) |
 | `change_video_speed` | Playback speed | `speedFactor` (e.g. 0.5, 2.0) |
@@ -63,14 +64,14 @@ All tools share:
 | `crop_media` | Pixel crop | `width`, `height`; optional `xCenter`, `yCenter` (0–1) |
 | `audio_fade` | Audio fade in/out | `audioFadeInSec`, `audioFadeOutSec` |
 | `remove_silence` | Cut dead-air pauses from talking-head footage (jump-cut tightening); **only call when the user explicitly asks** to remove silences/pauses/dead air or tighten pacing — never as part of general edits | `minSilenceSec` (default 0.5), `paddingSec` (default 0.15), optional `silenceThresholdDb` (auto-detected from the clip's own loudness if omitted) |
-| `edit_image_with_ai` | Small, precise, localized AI edit via GPT Image 2 (style/color/lighting change, or a pointer/arrow/highlight/border near a subject) — a tweak, not a re-draw; **only call on explicit request**. **Spends Shorz credits**; image only | `instruction` (short, specific; max 500 chars) |
+| `edit_image_with_ai` | Small, precise, localized AI edit via GPT Image 2.5 (style/color/lighting change, or a pointer/arrow/highlight/border near a subject) — a tweak, not a re-draw; **only call on explicit request**. **Spends Shorz credits**; image only | `instruction` (short, specific; max 500 chars) |
 | `get_media_info` | Probe duration, size, fps, audio | — (no `outputPath`) |
 | `extract_video_frames` | Save still frames as images (visual inspection / vision analysis); video only | `count` (1–60, default 5) **or** `timestamps` (seconds); optional `width`, `format` (`jpg` \| `png`) — returns `frames[]`, no `outputPath` |
 | `resize_media` | Scale to width/height | `width` and/or `height` |
 | `fit_to_aspect` | Letterbox/pillarbox to exact frame | `targetWidth`, `targetHeight`; optional `padColor` |
 | `extract_audio` | Export audio from video | optional `format`: `aac` \| `mp3` \| `wav` |
 | `replace_audio` | Swap video audio track | `audioPath` |
-| `concat_media` | Join clips in order | `inputPaths` (array, min 2) — no single `inputPath` |
+| `concat_media` | Join media in order — an **all-video** set or an **all-audio** set (e.g. re-joining TTS chunks into one narration track). Audio joins stream-copy when the inputs share container/codec/sample rate, otherwise re-encode. Mixing audio and video inputs is rejected | `inputPaths` (array, min 2) — no single `inputPath` |
 
 ## Execution sequence
 
@@ -97,12 +98,12 @@ All tools share:
 ## Common failures
 
 - **File not found** — `inputPath` must be absolute and on disk before the call.
-- **Unsupported format** — Video: `.mp4`, `.mov`, `.avi`, `.mkv`, `.wmv`, `.flv`, `.webm`. Image: `.jpg`, `.jpeg`, `.png`, `.bmp`, `.tiff`, `.webp`.
+- **Unsupported format** — Video: `.mp4`, `.mov`, `.avi`, `.mkv`, `.wmv`, `.flv`, `.webm`. Image: `.jpg`, `.jpeg`, `.png`, `.bmp`, `.tiff`, `.webp`. Audio (`concat_media`, `replace_audio`): `.mp3`, `.wav`, `.m4a`, `.aac`, `.ogg`, `.flac`, `.opus`.
 - **Shorz not running** — MCP bridge unavailable; start the desktop app.
 - **Empty loop/fade args** — `loop_video`, `fade_video`, and `audio_fade` need at least one of their optional duration/loop params set.
 - **`remove_silence` needs an audio track** — video-only, and the file must have audio to detect gaps in. It never runs unless the user explicitly asked for pause/silence removal.
-- **`edit_image_with_ai` keeps edits small** — write the instruction as a short, specific, localized change ("add a red arrow at X"), not a full scene rewrite; the tool always wraps it in a preserve-everything-else prompt. On any API failure it falls back to the original image (reported as a success with an explanatory summary, not an error) — it never breaks the chain. Repeating the exact same instruction on the same image reuses a cached result at no extra cost. Accepts every image format listed above (`.webp` / `.bmp` / `.tiff` are re-encoded before upload); the image is sent to the model at up to 1536px on the long edge, which is GPT Image 2's own maximum output size — so feeding it a 4K source does not buy extra detail.
+- **`edit_image_with_ai` keeps edits small** — write the instruction as a short, specific, localized change ("add a red arrow at X"), not a full scene rewrite; the tool always wraps it in a preserve-everything-else prompt. On any API failure it falls back to the original image (reported as a success with an explanatory summary, not an error) — it never breaks the chain. Repeating the exact same instruction on the same image reuses a cached result at no extra cost. Accepts every image format listed above (`.webp` / `.bmp` / `.tiff` are re-encoded before upload); the image is sent to the model at up to 1536px on the long edge — a Shorz cap (GPT Image 2.5 itself accepts larger custom sizes), so feeding it a 4K source does not buy extra detail.
 - **Resize requires a dimension** — `resize_media` needs at least one of `width` or `height`.
-- **Concat is video-only** — `concat_media` requires at least two video paths in `inputPaths`.
+- **Concat cannot mix audio and video** — `concat_media` takes at least two paths that are **all video** or **all audio**; a mixed set is rejected with an explicit error. Images are not concatenable (use `set_image_duration` first).
 - **Replace audio** — `replace_audio` needs a valid `audioPath` (.mp3, .wav, .m4a, .aac, etc.).
 - **Wrong workflow** — Do not create an `auto-edit` project just to trim one file; use these tools instead.

@@ -15,6 +15,7 @@ One presenter, one face, lip-synced to speech; the generated avatar clip then ru
 3. Square 1:1 — Instagram feed
 
 ### Q2 — Who is the presenter? (branch point)
+> **WIDGET STEP — mandatory when `show_widget` exists (it may be deferred: ToolSearch for it first; see `widgets.md`). Do not call the file picker or write the setting until the widget's button phrase comes back.** (Template A) when `show_widget` exists: a single *Presenter* card with *Open file picker* (`extensions: ["jpg","jpeg","png","webp"]`) and *Generate with AI* (routes to option 1/3/4 questions). Only if no `show_widget` tool can be found: use the options below.
 1. **Generate a presenter with AI from a description** (Recommended)
 2. Use a photo / image file I already have
 3. Make it look like a specific real person (face reference photos)
@@ -26,6 +27,7 @@ IF 3 → up to **3** face photos (JPEG/PNG/WebP), then ask the SCENE (pose/cloth
 IF 4 → the app ships **33 preset styles**. Offer 4 at a time with "show more": start with 3D Pixar (rec) / Realistic cinematic / Claymation / Studio Ghibli; other notables: flat vector, comic book, pixel art, LEGO, South Park cutout, minimalist line art, cyberpunk neon 3D, watercolor. The style prompt becomes the description + its thumb the reference.
 
 ### Q3 — Where do the words come from? (branch point — ask BEFORE angles, the script sets the clip count)
+> **WIDGET STEP — mandatory when `show_widget` exists (it may be deferred: ToolSearch for it first; see `widgets.md`). Do not call the file picker or write the setting until the widget's button phrase comes back.** (Template C) when `show_widget` exists: after the script is saved, render the voice cards (pre-filter to 8 by fit, `Show more` for the rest); the pick maps to `set_avatar_settings { avatarVoice }`. Only if no `show_widget` tool can be found: use the options below.
 1. **I have a script (or want one written) — pick an AI voice** (Recommended)
 2. I have a voiceover audio file already
 3. I'll record my own voice (UI-only: Avatar panel → Record Audio; MCP has no recorder)
@@ -37,6 +39,7 @@ IF 2 → path. `select_avatar_audio` (and the desktop file picker) accept `.mp3 
 **Count the sentences before moving on** — that number is the clip count if angles are enabled, and it drives the Q5 model advice.
 
 ### Q4 — Camera angles (needs an avatar image AND a known script length)
+> **WIDGET STEP — mandatory when `show_widget` exists (it may be deferred: ToolSearch for it first; see `widgets.md`). Do not call the file picker or write the setting until the widget's button phrase comes back.** (Template A) when `show_widget` exists: for option 3 only — one *Angle images (n / 3)* card whose picker phrase is `Open the Shorz file picker for the angle image`; re-render until 3 or the user continues. Only if no `show_widget` tool can be found: use the options below.
 Quote the real, *editorial* consequence from the script just captured: "your script is N sentences, so the video will cut between angles N times instead of holding one pose the whole way."
 1. **Yes — auto-generate 3 angles (¾ left, close-up, wide)** (Recommended once the script runs past a few sentences — a static pose gets visually monotonous fast)
 2. No — single pose (fine for a very short script, and skips the extra image generations)
@@ -47,6 +50,7 @@ Quote the real, *editorial* consequence from the script just captured: "your scr
 Max **3** angles; changing the main image resets both the angles and the crop. Worth knowing for option 2: a long script is split at silence to fit the model's per-request window and stitched automatically, and **without angles every split segment regenerates from the same still, so the pose visibly resets at each seam** (roughly every 29 s on OmniHuman, 60 s on Kling). With angles the split is per sentence anyway, so this never shows.
 
 ### Q5 — Quality / budget (avatar model)
+> **WIDGET STEP — mandatory when `show_widget` exists (it may be deferred: ToolSearch for it first; see `widgets.md`). Do not call the file picker or write the setting until the widget's button phrase comes back.** (Template B) when `show_widget` exists: three model cards in this order, Kling Avatar Pro recommended; price from the live catalog; OmniHuman card carries the highest-cost note. Only if no `show_widget` tool can be found: use the options below.
 1. **Kling Avatar Pro — balanced quality/cost** (Recommended)
 2. Kling Avatar — cheapest
 3. OmniHuman 1.5 — highest quality, most expensive per second
@@ -57,7 +61,7 @@ IF a Kling model → offer **motion style** in the same step (≤2500 chars → 
 ### Q6 — Extras (multi-select; every panel is OFF by default on a new project)
 1. **Subtitles** (Recommended for social)
 2. B-roll cutaways (imported = free; AI B-roll costs credits)
-3. Background music (imported free / auto-music paid)
+3. Background music (imported free, plays once; auto-music paid, loops to cover the whole video)
 4. Nothing — just the talking avatar
 
 If any chosen → also ask ONE free-text "editing guidance" line for the PromptBar (`set_user_instructions`) — explicitly NOT the spoken script, never aspect/pixel tokens. Transitions (`avatarTransitions`: `None` or `Transition01`–`Transition20` light leaks) apply whenever the render produces **2+ clips** — that means angles, but also a no-angle script long enough to be split at the model's per-request window. They are free to change and never trigger regeneration.

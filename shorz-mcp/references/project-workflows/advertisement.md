@@ -9,8 +9,8 @@ Use this for commercial/product/promo clips and short brand stories. For broad m
 On **Create Video**, Shorz builds the ad as one continuous story:
 
 1. A story-plan LLM designs the whole ad and splits the chosen length into **N = round(duration / 10)** ten-second **scenes**.
-2. For each scene it generates one **GPT Image 2 storyboard image** (consistent character/product/style, re-anchored to the reference images each scene).
-3. Each storyboard is animated into a **10-second clip by Gemini Omni Flash** (reference-to-video, native audio: speech/ambience/SFX).
+2. For each scene it generates one **GPT Image 2.5 storyboard image** (consistent character/product/style, re-anchored to the reference images each scene).
+3. Each storyboard is animated into a **10-second clip by Gemini Omni 1.1 Flash** (reference-to-video, native audio: speech/ambience/SFX).
 4. The scene clips are **concatenated** into the final ad, sized to the project aspect ratio.
 
 It works as a **pure product ad** (product only), a **character/brand story** (character only), or **both together**. Auto Edit and Clipping do not run for this project type.
@@ -21,8 +21,8 @@ The Advertisement panel shows:
 
 - **Product** — optional reference still (the product to feature).
 - **Character** — optional reference still (the person who presents / is the story; has a **Generate** button).
-- **Video generation model** — locked to **Gemini Omni Flash** (single, pre-selected option "for now").
-- **Ad duration (seconds)** — total length, **10–60 in steps of 10** (= N × 10s scenes).
+- **Video generation model** — locked to **Gemini Omni 1.1 Flash** (single, pre-selected option "for now").
+- **Ad duration (seconds)** — total length, **10–40 in steps of 10** (= N × 10s scenes). 40s is Gemini Omni 1.1's maximum total clip length.
 - **PromptBar** — the creative brief; this drives style and story, not just the images.
 
 **At least one** of Product / Character is required (the renderer aborts only if BOTH are missing). If the brief carries no style direction, style is derived from the Character image (then Product).
@@ -40,11 +40,11 @@ The Advertisement panel shows:
 | Key | Type | Notes |
 |---|---|---|
 | `advertisementVideoModel` | string enum | Accepted for compatibility, but the renderer **always uses `gemini-omni-flash-preview`** (engine is locked for now). |
-| `advertisementDurationSeconds` | integer | **TOTAL** ad length, **10–60** (in steps of 10). Split into `round(v/10)` × 10s scenes. |
+| `advertisementDurationSeconds` | integer | **TOTAL** ad length, **10–40** (in steps of 10). Split into `round(v/10)` × 10s scenes. 40s is Gemini Omni 1.1's maximum total clip length. |
 | `advertisementProductImage` | string or `null` | Path/URL to the Product image. |
 | `advertisementPersonImage` | string or `null` | Path/URL to the **Character** image (settings key kept as `*_person_image` for compatibility). |
 
-**MCP validation:** `set_advertisement_settings` **rejects** (`success: false` with an explicit message) when `advertisementDurationSeconds` is not an integer in **10–60**. Duration is the total ad length and is **no longer per-model bounded** (each scene is internally clamped to 10s by the Omni route). Values are typically multiples of 10; the renderer rounds to the nearest 10s scene count.
+**MCP validation:** `set_advertisement_settings` **rejects** (`success: false` with an explicit message) when `advertisementDurationSeconds` is not an integer in **10–40**. Duration is the total ad length and is **no longer per-model bounded** (each scene is internally clamped to 10s by the Omni route). Values are typically multiples of 10; the renderer rounds to the nearest 10s scene count.
 
 Default duration when omitted is **`30`** (app default `ADVERTISEMENT.advertisement_duration_seconds`); default model is **`gemini-omni-flash-preview`**.
 
@@ -70,7 +70,7 @@ For batch imports, use `import_frontend_assets` with `assetType: "image"`, then 
 
 ## Instruction handling rules
 
-- **Create an ad from scratch** — confirm `projectType: "advertisement"`, set the total duration (10–60), and **at least one** of Product / Character image. Persist the PromptBar ad brief. Trigger Create Video on user request. (You don't need to set the model — it's locked to Gemini Omni Flash.)
+- **Create an ad from scratch** — confirm `projectType: "advertisement"`, set the total duration (10–60), and **at least one** of Product / Character image. Persist the PromptBar ad brief. Trigger Create Video on user request. (You don't need to set the model — it's locked to Gemini Omni 1.1 Flash.)
 - **Edit existing ad behavior** — patch only the requested keys; keep unrelated settings untouched.
 - **Swap or remove product / character image** — `select_advertisement_image` or `remove_advertisement_image`; do not rewrite full settings.
 - **Change creative brief only** — `set_user_instructions`; do not modify panel keys. Brief must not include aspect ratio or pixel dimensions (**SKILL.md** → *Output framing*). The brief drives the story, pacing, speech/narration and style.
@@ -81,7 +81,7 @@ For batch imports, use `import_frontend_assets` with `assetType: "image"`, then 
 
 1. **Resolve project** per **SKILL.md** → *Project targeting rules*. Create only with explicit approval via `create_project` with `projectType: "advertisement"`.
 2. **Read state** (optional): `read_project_settings` → inspect `ADVERTISEMENT`.
-3. **Duration** — `set_advertisement_settings` with `advertisementDurationSeconds` (10–60). Model is optional (locked to Omni).
+3. **Duration** — `set_advertisement_settings` with `advertisementDurationSeconds` (10–40). Model is optional (locked to Omni).
 4. **Imagery** — `select_advertisement_image` per role (local paths) or `import_frontend_assets` + path patch. At least one of Product / Character. Use `remove_advertisement_image` to clear a role.
 5. **PromptBar** — `set_user_instructions` with the ad brief (audience, offer, story, tone, exact spoken lines, audio direction).
 6. **Create Video** (only when the user asks for a render):
@@ -103,7 +103,7 @@ The generated ad still goes through the shared effects chain, so Your Library �
 
 ## Common failures
 
-- **Duration out of bounds** — `set_advertisement_settings` fails unless `advertisementDurationSeconds` is an integer in **10–60**. Prefer multiples of 10.
+- **Duration out of bounds** — `set_advertisement_settings` fails unless `advertisementDurationSeconds` is an integer in **10–40**. Prefer multiples of 10.
 - **No imagery** — the render aborts if **both** Product and Character are empty. Ask the user to supply or import at least one image before Create Video.
 - **Image extension not supported by `select_advertisement_image`** — Only `.png`, `.jpg`, `.jpeg`. For `.webp` or other formats, import via `import_frontend_assets` (`assetType: "image"`) and patch the returned path.
 - **Voice drift across scenes** — a spoken character voice may differ between separately rendered scenes; for a multi-scene ad prefer narration for a consistent voice, or keep spoken lines short.

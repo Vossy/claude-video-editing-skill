@@ -13,6 +13,7 @@ In the **Audio** sidebar, the user sees **channel faders** for the main program 
 | What it is | One instrumental track generated per render by ElevenLabs from the transcript | The user's own files in `ASSET_PATHS.music_asset_paths` |
 | How to enable | `set_audio_settings` → `autoMusic: true` (**paid**, fails at zero balance) | `import_frontend_assets` with `assetType: "music"` (**free**) — see `your-library-assets.md` |
 | Track count | Exactly one, generated | **Unlimited** — several tracks play **back to back** (a playlist, not layered) in lane order |
+| Covering a long video | **Always full coverage** — generation is capped at 5 minutes, so on a longer video the track **loops**, with a **5s equal-power crossfade** at each seam, cut at the end | **Plays through once**, in the arranged order and length — match the imported total to the video length for full coverage |
 | Prompt control | Mood/genre wording only (steers the generation prompt) | Full arrangement: play order, a section of one named track, skipping into the combined music, placement on the timeline, volume, fades, mix-vs-replace — see `../project-workflows/auto-edit.md` → *Imported music* |
 | Beat sync | **Not possible** — the track does not exist when the edit is planned | Supported in multi-asset `auto-edit` when the brief asks |
 | Volume | `musicVolume` applies to whichever source is playing | same |
@@ -35,7 +36,7 @@ Both are mixed by the same renderer stage, so **`musicVolume` governs both**. Im
 | Key | Type | Notes |
 |-----|------|--------|
 | `autoMusic`, `autoSoundFX`, `imageSounds`, `transitionSounds`, `emojiSounds`, `zoomSounds`, `removeNoise`, `dubbing` | boolean | Toggles; must be real booleans (not `0`/`1`). |
-| `dubbingLanguage` | string | **Must be** one of the strings below, **verbatim and case-sensitive** (wrong casing fails). The list includes both **flag ids** (`de`, `gb`, …) and **display names** (`German`, `English`, …) for the same languages—**prefer ids**; they match the Audio panel. Display names are accepted at the MCP boundary and **normalized to ids** when saving; the app also maps stored names to ids on load. |
+| `dubbingLanguage` | string | **Must be** one of the accepted values, **verbatim and case-sensitive** (wrong casing fails). Dubbing runs on **ElevenLabs Dubbing v2**: 108 target languages (94 base + 14 regional dialects). Accepted: **BCP-47 codes** (`de`, `es`, `pt-BR`, `es-MX`, …), **display names** (`German`, `Spanish (Mexico)`, …), and the 13 **legacy flag ids** from the v1 era that are not already codes (`gb`, `cn`, `in-tamil`, … — listed in full below) — **prefer codes**; they match the Audio panel. Display names and legacy ids are normalized to codes when saving. ⚠ `my` is the code for **Burmese** (the legacy flag id `my` no longer means Malay — use `ms` or `Malay`). |
 | `audioReverbEffect` | string | **Exactly** one of the reverb preset strings below. |
 | `originalVolume`, `overlayVideoVolume`, `narratorVolume`, `soundFXVolume`, `musicVolume` | number | **Integers only**, each **0–100** inclusive. Non-integers or out-of-range values are **rejected** (not clamped). `musicVolume` applies to both auto-music and imported music (the brief can override it per render). |
 | `musicFadeIn`, `musicFadeOut` | number | **Finite** numbers, each **0–30** inclusive (seconds); `0` = no fade. Out-of-range or non-finite values are **rejected**. Volume fade at the start / end of the music segment, applied to **auto-music and imported music alike**. The renderer reads them for every render of the project (`get_video_music_fadein` / `get_video_music_fadeout`), unless the brief asks for a different fade — a PromptBar fade wins for that render only. The UI has no fade controls, so this tool and the PromptBar are the only ways to set one. |
@@ -47,9 +48,11 @@ Both are mixed by the same renderer stage, so **`musicVolume` governs both**. Im
 - `audio_reverb_effect`, `audio_dubbing_language`.
 - Music fades → `audio_music_fadein`, `audio_music_fadeout` (stringified seconds, `0` = no fade).
 
-**Allowed `dubbingLanguage` values (copy verbatim):**
+**Allowed `dubbingLanguage` codes (copy verbatim; every code's display name — e.g. `German`, `Spanish (Mexico)` — is also accepted, as are the 13 legacy flag ids):**
 
-`gb`, `sa`, `bg`, `cn`, `hr`, `cz`, `dk`, `nl`, `fi`, `fr`, `de`, `gr`, `in`, `id`, `it`, `jp`, `kr`, `my`, `ph`, `pl`, `pt`, `ro`, `ru`, `sk`, `es`, `se`, `in-tamil`, `tr`, `ua`, `English`, `Arabic`, `Bulgarian`, `Chinese`, `Croatian`, `Czech`, `Danish`, `Dutch`, `Finnish`, `French`, `German`, `Greek`, `Hindi`, `Indonesian`, `Italian`, `Japanese`, `Korean`, `Malay`, `Filipino`, `Polish`, `Portuguese`, `Romanian`, `Russian`, `Slovak`, `Spanish`, `Swedish`, `Tamil`, `Turkish`, `Ukrainian`
+`af`, `ak`, `sq`, `am`, `ar`, `ar-EG`, `hy`, `as`, `az`, `eu`, `be`, `bs`, `bg`, `my`, `yue`, `ca`, `ceb`, `zh`, `zh-TW`, `hr`, `cs`, `da`, `dgo`, `nl`, `en`, `en-AU`, `en-CA`, `en-GB`, `en-US`, `et`, `fil`, `fi`, `fr`, `fr-CA`, `fr-FR`, `gl`, `ka`, `de`, `el`, `gu`, `ha`, `he`, `hi`, `hu`, `is`, `id`, `it`, `ja`, `jv`, `kn`, `kk`, `ki`, `rw`, `rn`, `ko`, `ky`, `lv`, `lt`, `lg`, `mk`, `ms`, `ml`, `cmn`, `mr`, `mn`, `ne`, `no`, `fa`, `pl`, `pt`, `pt-BR`, `pt-PT`, `pa`, `ro`, `ru`, `nso`, `st`, `sd`, `sk`, `sl`, `es`, `es-AR`, `es-CL`, `es-ES`, `es-MX`, `su`, `sw`, `ss`, `sv`, `tg`, `ta`, `te`, `th`, `bo`, `ts`, `tn`, `tr`, `uk`, `ur`, `ug`, `uz`, `ve`, `vi`, `war`, `cy`, `wo`, `yo`, `zu`
+
+Legacy flag ids (still accepted, normalized on save): `gb`→`en`, `sa`→`ar`, `cn`→`zh`, `cz`→`cs`, `dk`→`da`, `gr`→`el`, `in`→`hi`, `jp`→`ja`, `kr`→`ko`, `ph`→`fil`, `se`→`sv`, `in-tamil`→`ta`, `ua`→`uk` (ids like `de`, `es`, `id` already are codes).
 
 **Allowed `audioReverbEffect` values (copy verbatim):**
 
@@ -80,7 +83,7 @@ Both are mixed by the same renderer stage, so **`musicVolume` governs both**. Im
 - **Non-boolean toggles** — rejected at validation (`expected boolean`).
 - **Volume keys** — must be **integers** in **0–100**; fractional or out-of-range values are **rejected** (not clamped).
 - **Fade keys** — must be **finite** and in **0–30**; otherwise rejected. A stored fade is silently outranked by a fade in the brief, so if a user reports “my 5s fade became 2s”, check the PromptBar text before the settings.
-- **Invalid `dubbingLanguage` or `audioReverbEffect`** — use a string from the lists above **with exact spelling and casing** (e.g. `de` and `German` are valid; `DE` and `german` are not). Errors include the allowed set; retry with a listed value.
+- **Invalid `dubbingLanguage` or `audioReverbEffect`** — use a string from the lists above **with exact spelling and casing** (e.g. `de`, `pt-BR` and `German` are valid; `DE`, `pt-br` and `german` are not). Errors include a hint; retry with a listed value.
 - **Wrong shape** — `projectPath` and `settings` must be top-level tool arguments.
 ## Audio Visualization (`set_audio_visualization_settings`)
 

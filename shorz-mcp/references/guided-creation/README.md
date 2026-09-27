@@ -51,6 +51,7 @@ Two guided flows produce a **single asset**, not a project. They never call `cre
 - **Recommended default goes FIRST**, labeled `(Recommended)`. The recommendation must fit what is already known (e.g. vertical first for clipping; if the user said "for YouTube longform", recommend horizontal instead).
 - **One dependent step at a time.** Batch up to 4 questions in one call ONLY when they are independent of each other's answers. Branching steps (anything marked IF/THEN in the flow files) must wait for the previous answer.
 - **Ground every option in the app.** Options, ranges and defaults come from the per-type flow file (which mirrors the real panels). Never offer a value the app cannot persist. Free-text answers get clamped/validated to the documented range — tell the user when you clamp ("max is 8, so I set 8").
+- **Widget steps (mandatory where available).** Image-slot, model and voice choices render as inline cards (`widgets.md`) whenever the client has a `show_widget` tool — search for it with `ToolSearch` first, it is usually deferred. On those steps you render the cards and **wait**; you never open the native file dialog or write the setting until the card's button phrase arrives as the user's message. Every other step, and every client without `show_widget`, uses the question tool exactly as written.
 - Keep each flow to its listed steps (~4–7 questions). Optional extras live behind a single "anything else?" step, not more questions.
 
 ## Question design rules (learned the hard way — apply to every flow)
@@ -101,3 +102,4 @@ These are the recurring failure modes, every one of them found in a real draft o
 | `advertisement.md` | Mode → format → images → length → tone → delivery → extras |
 | `thumbnail-creator.md` | Format → subject → text → references → model → variations |
 | `animation-studio.md` | Kind → style → imports → output format → model |
+| `widgets.md` | Card-widget templates + fixed button phrases for image / model / voice steps |

@@ -35,7 +35,7 @@ No length limit anywhere. A font-preference sentence (Bebas Neue, Impact, Anton,
 1. **No** (Recommended)
 2. Yes — paste the video link
 
-The link resolves to that video's poster frame and is prepended as the **first** reference. It consumes one of the three reference slots (leaving two uploads), and on GPT Image 2 it carries the reference surcharge (see Summary).
+The link resolves to that video's poster frame and is prepended as the **first** reference. It consumes one of the three reference slots (leaving two uploads), and on GPT Image 2.5 it carries the reference surcharge (see Summary).
 
 ⚠️ **`youtubeReferenceUrl` does NOT inherit from the draft on generate** — unlike `referenceImages`, it is read from the call argument. Re-pass it on `thumbnail_creator_generate` or it is silently ignored for that run.
 
@@ -48,11 +48,11 @@ Accept only `.png .jpg .jpeg .webp .gif` and **verify each path exists first** �
 
 **Enforce the 3-image cap yourself.** The UI always caps at 3, but the MCP path only caps when a YouTube reference is present — without one it is uncapped and will ship all ten references you hand it.
 
-**Branch:** any reference changes what the models do — Nano Banana switches to `nano-banana-pro-edit`, and GPT Image 2 routes to OpenAI's image-edit endpoint.
+**Branch:** any reference changes what the models do — Nano Banana switches to `nano-banana-pro-edit`, and GPT Image 2.5 routes to OpenAI's image-edit endpoint.
 
 ### Q6 — Model and quality (one bundled choice — they are coupled)
-1. **GPT Image 2 · Medium — best value** (Recommended)
-2. GPT Image 2 · High — sharpest text rendering
+1. **GPT Image 2.5 · Medium — best value** (Recommended)
+2. GPT Image 2.5 · High — sharpest text rendering
 3. Nano Banana 2 · 1K — a different look; web-search-informed when no references are attached
 4. Nano Banana 2 · 2K/4K — largest source pixels
 
@@ -75,7 +75,7 @@ Each variation is a **separate billable call**, run sequentially. Pass a whole n
 
 State the bill as a number before generating:
 
-> `perImage × variations` — **plus `2 × references × variations` when the model is GPT Image 2 and any reference (including the YouTube link) is attached.**
+> `perImage × variations` — **plus `2 × references × variations` when the model is GPT Image 2.5 and any reference (including the YouTube link) is attached.**
 
 The panel's own GENERATE button omits that surcharge, so a GPT run with 3 references and 3 variations displays 18 credits and bills roughly 36. Nano is unaffected — it bills from provider-reported cost.
 

@@ -30,16 +30,16 @@ When users use app-style labels, map to tool arguments like this:
 
 | User / app label | MCP argument |
 |------------------|--------------|
-| GPT Image 2 | **`imageGenerator`:** **`gpt-image-2`** |
+| GPT Image 2.5 | **`imageGenerator`:** **`gpt-image-2`** (the `gpt-image-2` id now serves GPT Image 2.5) |
 | Nano Banana 2 | **`imageGenerator`:** **`nano-banana`** |
 | Quality 1K / 2K / 4K (with Nano) | **`resolution`:** **`1K`** \| **`2K`** \| **`4K`** |
-| Quality Low / Medium / High (with GPT) | **`gptImageQuality`:** **`low`** \| **`medium`** \| **`high`** (GPT Image 2 API enum). Default in app + draft: **`medium`**. |
+| Quality Low / Medium / High (with GPT) | **`gptImageQuality`:** **`low`** \| **`medium`** \| **`high`** (GPT Image 2.5 API enum). Default in app + draft: **`medium`**. |
 | YouTube (landscape layout) | **`aspectRatio`:** **`16:9`** |
 | Shorts (vertical) | **`aspectRatio`:** **`9:16`** |
 | Number of variations | **`numVariations`:** integer **1–6** |
 | YouTube video link (optional) | **`youtubeReferenceUrl`:** full URL, Shorts/watch/embed URL, or 11-character video id |
 
-**Shorts + YouTube link:** **`youtubeReferenceUrl`** is only applied when **`aspectRatio`** is **`16:9`** — for **either** model (Nano Banana via `image_urls`, GPT Image 2 via OpenAI image edits). For **`9:16`**, omit it or expect no effect.
+**Shorts + YouTube link:** **`youtubeReferenceUrl`** is only applied when **`aspectRatio`** is **`16:9`** — for **either** model (Nano Banana via `image_urls`, GPT Image 2.5 via OpenAI image edits). For **`9:16`**, omit it or expect no effect.
 
 ---
 
@@ -49,19 +49,21 @@ When users use app-style labels, map to tool arguments like this:
 
 - **`textOverlay`** — Optional short headline shown on-image. Empty = no overlay line in the model prompt; if set, MCP appends wording of the form: include prominent overlay text **matching** what you passed (quotes literal in prompt). Separate system text adds readability/font hints—do **not** paste long font lists into **`textOverlay`**.
 
-- **`imageGenerator`** — **`nano-banana`** \| **`gpt-image-2`**. **Always pass explicitly when possible.** If **`thumbnail_creator_generate`** omits it, the server default is **`nano-banana`** even though a newly created draft tends toward **`gpt-image-2`**—omission is confusing. Both models accept **`referenceImages`** and (for **16:9**) **`youtubeReferenceUrl`**: Nano Banana edits via `image_urls`, GPT Image 2 via OpenAI image edits.
+- **`imageGenerator`** — **`nano-banana`** \| **`gpt-image-2`**. **Always pass explicitly when possible.** If **`thumbnail_creator_generate`** omits it, the server default is **`nano-banana`** even though a newly created draft tends toward **`gpt-image-2`**—omission is confusing. Both models accept **`referenceImages`** and (for **16:9**) **`youtubeReferenceUrl`**: Nano Banana edits via `image_urls`, GPT Image 2.5 via OpenAI image edits.
 
 - **`aspectRatio`** — **`16:9`** \| **`9:16`**.
 
-- **`resolution`** — **`1K`** \| **`2K`** \| **`4K`**. Used by **Nano Banana** only; GPT Image 2 ignores it for API quality (GPT uses **`gptImageQuality`**).
+- **`resolution`** — **`1K`** \| **`2K`** \| **`4K`**. Used by **Nano Banana** only; GPT Image 2.5 ignores it for API quality (GPT uses **`gptImageQuality`**).
 
-- **`gptImageQuality`** — **`low`** \| **`medium`** \| **`high`**. **GPT Image 2** only; persisted in draft with Nano; **Nano** ignores it for generation. On **`thumbnail_creator_generate`**, if omitted, the server derives quality from the **saved draft’s** `gptImageQuality` (with legacy normalization: **`auto`**→**`medium`**, **`extra_low`**→**`low`**). If the draft value is still ambiguous, fallback uses the **`resolution`** argument **passed to this generate call** (default **`1K`**→**`medium`**, **`2K`**/**`4K`**→**`high`**)—not a silent cross-map from Nano **`resolution`** alone.
+- **`gptImageQuality`** — **`low`** \| **`medium`** \| **`high`**. **GPT Image 2.5** only; persisted in draft with Nano; **Nano** ignores it for generation. On **`thumbnail_creator_generate`**, if omitted, the server derives quality from the **saved draft’s** `gptImageQuality` (with legacy normalization: **`auto`**→**`medium`**, **`extra_low`**→**`low`**). If the draft value is still ambiguous, fallback uses the **`resolution`** argument **passed to this generate call** (default **`1K`**→**`medium`**, **`2K`**/**`4K`**→**`high`**)—not a silent cross-map from Nano **`resolution`** alone.
 
 - **`numVariations`** — **1–6** (clamped server-side).
 
 - **`referenceImages`** — Array of strings: **`http`/`https`**, **`data:`**, **`local-resource://`**, or **absolute local paths** to image files. **Both** models send them into the generation request: **`nano-banana`** as `image_urls`, **`gpt-image-2`** via OpenAI image edits.
 
 - **`youtubeReferenceUrl`** — See next section.
+
+- **`selectedPreviewUrl`** — **`set_thumbnail_creator_settings`** only (string or **`null`**). The draft's currently highlighted preview — the image the modal shows large and the one the app treats as "the chosen thumbnail". A finished generation sets it to the newest result automatically, so you rarely need to write it; pass a URL from **`read_project_settings`** → **`thumbnail_creator_draft.thumbnails`** to pick a different variation for the user, or **`null`** to clear the selection.
 
 - **`awaitCompletion`** — **`thumbnail_creator_generate`** only. **`false`** or omit (**default**): non-blocking; MCP returns **`accepted`**, **`generationRunId`**, then poll **`get_thumbnail_creator_generation_status`** until **`isGenerating`** is **`false`**. **`true`**: wait for AIML and return **`savedLocalFilePaths`** in that tool response (legacy; risks **`terminated`** from short MCP timeouts).
 
@@ -95,9 +97,9 @@ Practice: channel / “reuse this thumbnail look” workflows → either model +
 
 - **Nano, no refs and no usable YouTube ref above:** Text-led generation path (with backend web search enabled on that route).
 
-- **Nano, any refs (files, URLs, or YouTube-derived URL):** Reference / edit-style path—**≤3** images; oversized payloads may retry with **only the first reference** (**warning** in **`warnings`**).
+- **Nano, any refs (files, URLs, or YouTube-derived URL):** Reference / edit-style path. The **≤3** cap applies **only when a `youtubeReferenceUrl` resolved** (the poster is prepended and the merged list is then truncated to three); with no YouTube reference, every entry you pass in **`referenceImages`** is sent. Oversized payloads may retry with **only the first reference** (**warning** in **`warnings`**).
 
-- **GPT Image 2:** Text + aspect **`size`** from **`aspectRatio`**. With refs, uses OpenAI image edits (**`size`** from **`aspectRatio`**).
+- **GPT Image 2.5:** Text + aspect **`size`** from **`aspectRatio`**. With refs, uses OpenAI image edits (**`size`** from **`aspectRatio`**).
 
 - Successful runs **write PNGs** (default names **`{fileNamePrefix}-{timestamp}.png`**) into the app’s **Generated Thumbnails** area; **`16:9`** outputs are resized toward **1280×720**, **`9:16`** toward **1080×1920**. With **`awaitCompletion: true`**, the tool JSON lists **`savedLocalFilePaths`** and **`generatedCount`**. With async mode, infer success from disk after **`isGenerating`** clears.
 
@@ -133,7 +135,7 @@ Typical **`warnings`** strings:
 
 - **`youtubeReferenceUrl`** with **Shorts** (**`9:16`**) expecting a poster ref—inactive.
 
-- Expecting GPT to honor **`referenceImages`**.
+- Assuming **`gpt-image-2`** ignores **`referenceImages`**. It does **not** — both models consume them (GPT Image 2.5 via OpenAI image edits), so references you leave in the draft still steer a GPT run, and dropping them is an explicit patch (**`referenceImages: []`**), not a side effect of switching models.
 
 - Assuming a **`terminated`** MCP result means generation failed—mostly relevant when using **`awaitCompletion: true`**; use async + polling to avoid long-held tool calls.
 

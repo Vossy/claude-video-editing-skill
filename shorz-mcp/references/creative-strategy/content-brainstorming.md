@@ -63,7 +63,7 @@ Aspect: [9:16 default for TikTok/Reels — set via switch_project_aspect_ratio]
 | **Founder confessional** | "I built this because I was tired of…" | `avatar`, `auto-edit` | `save_avatar_image`, `save_avatar_audio`, main asset talking head |
 | **Cliffhanger story** | "She didn't know the door was already open…" | `text-to-video`, headless loop | `save_text_to_video_speech_audio`, `concat_media` + satisfying B-roll |
 | **Sign / text on screen** | Handwritten sign: "Stop scrolling if you…" | `auto-edit`, `clipping` | `set_title_settings`, `import_frontend_assets` |
-| **Before / after split** | Side-by-side or swipe reveal | `advertisement`, `auto-edit` | `switch_project_aspect_ratio`, `set_broll_settings` tile layout |
+| **Before / after split** | Side-by-side or swipe reveal | `advertisement`, `auto-edit` | `switch_project_aspect_ratio`, `set_broll_settings` (fit-mode `brollPositionX/Y` + `brollFitWidthPercent`) |
 | **Hot take debate** | "AI will replace tutors" vs "No it won't" | `podcast` | `set_podcast_settings` with `[Interviewer]` / `[Interviewee]` tags |
 
 ---
@@ -99,10 +99,10 @@ Aspect: [9:16 default for TikTok/Reels — set via switch_project_aspect_ratio]
 **MCP tool chain:**
 
 1. `create_project` (if needed) → `advertisement` or `auto-edit`
-2. `import_frontend_assets` — `image` for before/after stills; `video` for screen captures (`auto-edit` only)
-3. `select_advertisement_image` — `role: product` (after) + optional `person` (creator reaction still)
-4. `set_advertisement_settings` — shortest ad length (`advertisementDurationSeconds: 10`; ads are 10–60 s in 10 s steps). The ad engine is locked to Gemini Omni Flash — no model to pick.
-5. `set_broll_settings` — tile or picture-in-picture for split comparison (`auto-edit` path)
+2. `import_frontend_assets` — `broll` for the before/after stills; `video` for screen captures (`auto-edit` only). **Do not use `assetType: "image"`** — it returns metadata only and persists nothing to any lane.
+3. `select_advertisement_image` — `role: product` (after) + optional `person` (creator reaction still). This, not `import_frontend_assets`, is how stills reach an `advertisement` project.
+4. `set_advertisement_settings` — shortest ad length (`advertisementDurationSeconds: 10`; ads are 10–40 s in 10 s steps). The ad engine is locked to Gemini Omni 1.1 Flash — no model to pick.
+5. `set_broll_settings` — the comparison is a **fit-mode overlay**, not a tile grid: `fullscreenBRoll: false` plus `brollPositionX` / `brollPositionY` (center-X / top-Y percent) and `brollFitWidthPercent` (30–100). There is **no** tile, split, or picture-in-picture layout control — an inset is just a narrow fit width parked to one side (`auto-edit` path)
 6. `set_title_settings` — "BEFORE → AFTER" or swipe-style headline
 7. `set_user_instructions` — ad brief: outcome-first hook, comparison CTA (no pixel sizes)
 8. `trigger_create_video` → `get_video_generation_status`
@@ -121,7 +121,7 @@ Aspect: [9:16 default for TikTok/Reels — set via switch_project_aspect_ratio]
 
 | Shorz | Choice |
 |---|---|
-| **Project type** | `avatar` (talking head + layered demo) or `auto-edit` (reaction clip + PIP screen) |
+| **Project type** | `avatar` (talking head + layered demo) or `auto-edit` (reaction clip + inset screen via fit-mode B-roll) |
 | **Aspect** | `9:16` |
 
 **MCP tool chain:**
@@ -129,8 +129,8 @@ Aspect: [9:16 default for TikTok/Reels — set via switch_project_aspect_ratio]
 1. `set_avatar_settings` — script mode with short reaction line ("Wait… this actually works?")
 2. `save_avatar_image` / `select_avatar_image` — creator or stock avatar
 3. `save_avatar_audio` or TTS via script field
-4. `import_frontend_assets` — `broll` or `video` screen recording
-5. `set_broll_settings` — overlay screen capture on lower third or full flip after 2 s
+4. `import_frontend_assets` — the screen recording as **`broll`**. `assetType: "video"` is **rejected in an `avatar` project** (no main VIDEOS lane — the tool errors and tells you to use `broll`); it is only available on the `auto-edit` path.
+5. `set_broll_settings` — the screen capture is either fullscreen (`fullscreenBRoll: true`) or a fit-mode overlay you place with `brollPositionX` / `brollPositionY` + `brollFitWidthPercent` (e.g. lower third = low `brollPositionY`, width ~60). There is **no timed "flip after 2 s"** and no PIP mode — placement is a static setting, and when the cut happens is the compositor's call
 6. `set_overlay_settings` — whip pan / flash transition at flip point (`get_overlay_effects` for available ids)
 7. `set_user_instructions` — optional: "fast cuts, high energy, no corporate tone" (not the spoken script)
 8. `trigger_create_video`
@@ -156,8 +156,8 @@ Aspect: [9:16 default for TikTok/Reels — set via switch_project_aspect_ratio]
 2. `textToVideoScript` — concise TTS: problem → app solves it → CTA (panel field, not PromptBar)
 3. `save_text_to_video_speech_audio` — if refining voice timing before render
 4. `import_frontend_assets` — satisfying `broll` + screen `video` (when `imported`)
-5. `set_broll_settings` — split tile: 40% satisfying / 60% demo (or stacked top/bottom)
-6. `set_subtitle_settings` — high-contrast animated style (VHS, glitch, bold yellow — match panel enums)
+5. `set_broll_settings` — **there is no split-tile / 40-60 layout.** The satisfying lane is fit-mode B-roll placed with `brollPositionX` / `brollPositionY` + `brollFitWidthPercent` (e.g. width 100 parked at the bottom half via `brollPositionY`), or fullscreen (`fullscreenBRoll: true`) if it should take the frame outright
+6. `set_subtitle_settings` — high-contrast animated style. Animation ids come from the **subtitle** enums (`Pop`, `Bounce`, `Zoom-in`, `Slide-in from Bottom`, …) plus bold color/stroke; **`Glitch` and `Retro VHS` are NOT subtitle animations** — they are *zoom overlay effects* (`zoomInEffects` / `zoomOutEffects` on `set_general_video_settings`) and passing them here fails validation
 7. `set_audio_settings` — duck music under voice
 8. `switch_project_aspect_ratio` → `9:16`
 9. `trigger_create_video`
@@ -175,7 +175,7 @@ Aspect: [9:16 default for TikTok/Reels — set via switch_project_aspect_ratio]
 | Shorz | Choice |
 |---|---|
 | **Project type** | `podcast` |
-| **Aspect** | `9:16` or `1:1` |
+| **Aspect** | `9:16` (stacked top/bottom) or `16:9` (side-by-side). **Not `1:1`** for a two-on-screen debate — see the warning below |
 
 **MCP tool chain:**
 
@@ -186,10 +186,12 @@ Aspect: [9:16 default for TikTok/Reels — set via switch_project_aspect_ratio]
    - Contrasting `podcastInterviewerVoice` / `podcastIntervieweeVoice` — use `list_elevenlabs_voices`
    - `podcastAvatarDisplayType`: `Show Both Avatars` for split debate
    - Optional `podcastCameraMotion`: `Handheld Camera` for urgency
-2. `select_podcast_avatar_image` or `import_frontend_assets` (`avatar`) for each role
+2. `select_podcast_avatar_image` for each role. **`import_frontend_assets` with `assetType: "avatar"` (or `"image"`) will not do this** — those return metadata only and persist nothing; use the dedicated select/save avatar tools (`select_podcast_avatar_image`, `select_avatar_image` / `save_avatar_image`).
 3. `set_user_instructions` — B-roll/mood only: "minimal B-roll, fast pacing"
 4. `switch_project_aspect_ratio`
 5. `trigger_create_video`
+
+⚠️ **Never pair `1:1` with `Show Both Avatars`.** A square podcast project renders **fullscreen single-avatar regardless of the display type** — but the idle-clip cost is keyed on the display type **alone**, so the render still generates and bills **2 idle clips (~4 s each)** the viewer never sees. On a square project use `Show Only Talking Avatar`; keep `Show Both Avatars` for `9:16` (stacked) or `16:9` (side-by-side). See **`../guided-creation/podcast.md`** → Q3/Q4.
 
 **Variants:** strict professor vs lazy student; user vs app; skeptic vs fanboy; "old way" vs "new way."
 

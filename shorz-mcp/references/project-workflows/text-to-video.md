@@ -13,7 +13,7 @@ The Text-to-Video panel shows:
 - **Script** field (script mode).
 - **Voice** — ElevenLabs voice id/name (script mode).
 - **Transition type(s)** and **image motion(s)** — drive how scenes change and how stills animate.
-- **Image model** — `Nano Banana 2` or `GPT Image 2` (when `source_media` uses generated images). (Nano Banana 2 Lite is not a TTV option — use it for AI B-roll or standalone image generation instead.)
+- **Image model** — `Nano Banana 2`, `GPT Image 2` (the `GPT Image 2` id now serves GPT Image 2.5 Flare — the fast variant) or `GPT Image 2.5 Sunburst` (OpenAI's sharper, slightly slower variant; same 2 credits per still, best same-face likeness from references) (when `source_media` uses generated images). (Nano Banana 2 Lite is not a TTV option — use it for AI B-roll or standalone image generation instead.)
 - **Video model** — pick from the supported list (when `source_media` uses generated video).
 - **Reference images** — optional, **typed** since v2.5.x: **Style** (0–3), **Characters** (0–4, each with a required unique name; 4 = the verified per-frame identity limit), **Environments** (0–4, named). Every type is optional — the pipeline auto-generates whatever is missing from the script. Named characters/environments do NOT need to be mentioned in the script: explicit role matches are used when present (character "Maya" with notes "the detective" plays "a detective"; notes settable via MCP, not shown in the panel UI), otherwise the pipeline stages them itself — characters become the cast that visualizes the narration, environments the recurring settings, decided per scene by the shot writer. They stay visually consistent across every scene that features them; only genuinely people-free content (infographics, object demos) skips character references. The panel also has a per-type **Generate…** modal to create references in-app.
 - **Style references contribute STYLE ONLY.** The pipeline distills style images into a textual "style bible" applied to every scene; the raw style photos are NOT attached to per-scene generation, so a person, object or place visible in a style photo never becomes a scene subject and never competes with Character/Environment references (they still shape the look of the generated character/environment sheets). A person who should appear in the video must be added as a **Character** reference — putting their photo in the Style bucket only donates its look.
@@ -35,7 +35,7 @@ Use **standalone MCP tools** when the user only wants **individual assets** with
 | One i2v clip from a still | `generate_image_to_video` | `imagePath`, `prompt`, **required** `videoModel`, optional `durationSec`. Same model ids as `textToVideoVideoModel`. |
 | Quick AIML still (no TTV parity) | `generate_images` | Node/AIML only; different model id labels. |
 
-All three are **async by default**: they return `{ started, jobId }` immediately — poll `get_job_status { jobId }` until `lastStatus` is `completed` (`result` carries the normal payload; `outputPaths` lists the absolute saved files) or `error`. GPT Image 2 stills can take ~5–6 min and i2v clips longer; `awaitCompletion: true` restores the blocking form only if your tool-call timeout allows it. **Never re-call a generation because a poll timed out — the job is still running and a retry would bill credits twice.**
+All three are **async by default**: they return `{ started, jobId }` immediately — poll `get_job_status { jobId }` until `lastStatus` is `completed` (`result` carries the normal payload; `outputPaths` lists the absolute saved files) or `error`. GPT Image 2.5 stills can take a few minutes (2.5 is up to ~50% faster than GPT Image 2) and i2v clips longer; `awaitCompletion: true` restores the blocking form only if your tool-call timeout allows it. **Never re-call a generation because a poll timed out — the job is still running and a retry would bill credits twice.**
 
 After standalone generation, import or assign paths manually (`import_frontend_assets`, reference image helpers) if building a project later. **Never** put script text in PromptBar; **never** use standalone tools as a shortcut for Create Video on an existing text-to-video project unless the user only asked for assets.
 
@@ -57,7 +57,7 @@ After standalone generation, import or assign paths manually (`import_frontend_a
 | `textToVideoTransitionTypes` | string[] | Array of the same enum values. |
 | `textToVideoImageMotion` | string enum | One of the image motions below. |
 | `textToVideoImageMotions` | string[] | Array of the same enum values. |
-| `textToVideoImageModel` | string enum | `Nano Banana 2` \| `GPT Image 2`. (Lite is not a TTV option.) |
+| `textToVideoImageModel` | string enum | `Nano Banana 2` \| `GPT Image 2` (GPT Image 2.5 Flare, fast) \| `GPT Image 2.5 Sunburst` (sharper, slightly slower, same price). (Lite is not a TTV option.) |
 | `textToVideoVideoModel` | string enum | See video model list below. |
 | `textToVideoReferenceImagePaths` | string[] | Up to **3** entries; extra entries are dropped server-side. **Legacy: style references only.** Writing it also syncs the typed styles bucket. For characters/environments use the typed tools below. |
 
@@ -71,14 +71,14 @@ After standalone generation, import or assign paths manually (`import_frontend_a
 
 **Allowed `textToVideoVideoModel` values (copy verbatim):**
 
-- `klingai/video-v3-standard-image-to-video` — **the default** (3–15s clips)
+- `klingai/video-v3-standard-image-to-video` — 3–15s clips (~26 cr/s)
 - `gemini-omni-flash-preview` — native Google route; token-billed (~12 credits/sec real cost); 1–10s clips, 16:9/9:16. Also the locked Advertisement engine. Cheapest is Seedance 2.0 Mini (9 cr/s). NB Google's Tier-1 quota is only 20 requests/day: if an Omni clip fails mid-render, the remaining scene/b-roll clips of that render automatically reroute to Seedance 2.0 Fast (closest credit cost, ~14 cr/s); ads never reroute.
-- `bytedance/seedance-2-5` — premium Seedance tier (~27 cr/s @720p, the priciest video model). Generates **4–30s in one coherent clip**, where the 2.0 family caps at 15s and stitches anything longer from chained segments. 480p/720p only (no 1080p/4k — use `bytedance/seedance-2-0` for those). Requires app 3.2.0+.
+- `bytedance/seedance-2-5` — premium Seedance tier (~27 cr/s @720p, the priciest video model). Generates **4–30s in one coherent clip**, where the 2.0 family caps at 15s and stitches anything longer from chained segments. 480p/720p only (no 1080p/4k — use `bytedance/seedance-2-0` for those). Requires app 3.1.0+.
 - `bytedance/seedance-2-0` — the only Seedance with 1080p/4k output
 - `bytedance/seedance-2-0-fast`
-- `bytedance/seedance-2-0-mini`
-- `klingai/video-v3-standard-image-to-video`
-- `custom:happyhorse-1.0`
+- `bytedance/seedance-2-0-mini` — **the server catalog default for `text_to_video`** (4–15s clips, cheapest at ~9 cr/s @720p)
+
+**Retired — do not send:** `google/veo-3.1-i2v-fast` is rejected by validation on write. `custom:happyhorse-1.0` is worse — it **still passes MCP validation**, so the write succeeds, but its catalog row is disabled and the render then fails at generation time.
 
 **Persistence oracle** — confirm via `read_project_settings` → `SCRTIPT_TO_VIDEO` (yes, with that spelling — it is the on-disk key):
 
@@ -149,6 +149,8 @@ The PromptBar suggestions panel (textarea focused) has an **Example Styles** tab
    - `stop_video_generation` on user request.
 9. **Return outcome** — success/failure, generated output location(s), model/provider warnings.
 
+**Re-rendering an unchanged project is free.** Script, voice, models, references and PromptBar text form a cache key; an exact match reuses the scene images, AI clips and narration from the previous run and skips every AI call (so it costs no credits and finishes in render time alone). The Generation Logs list each reused asset — `Cached scene image N/M`, `Cached scene video N/M`, `Cached narration audio N/M`, one preview per file — so the reused set is auditable. Change any keyed input and only the affected assets regenerate.
+
 ## Imported music
 
 Your Library → **MUSIC** works here exactly as elsewhere: `import_frontend_assets` with `assetType: "music"` (free, any number of files; several play **back to back** in lane order). Nothing needs enabling — imported music is mixed into every render. The **PromptBar** can then steer play order, a section of one named track, skipping into the combined music, where the music sits on the timeline, volume, fades, and whether it mixes under the narration or replaces the clip audio. Full vocabulary: **`auto-edit.md`** → *Imported music*. Typical TTV ask: *"25% volume under the narration, fade out over the last 3 seconds."* Beat-synced **cutting** does not apply (multi-asset `auto-edit` only) — scene changes here follow the script's sentences.
@@ -160,7 +162,7 @@ Your Library → **MUSIC** works here exactly as elsewhere: `import_frontend_ass
 - `textToVideoTransitionType`: `automatic` (**AI Automatic** — the default; let Shorz pick transitions unless the user names specific ones)
 - `textToVideoImageMotion`: `ai` (**AI Automatic** — the default; let Shorz pick motion unless the user names specific ones)
 - `textToVideoImageModel`: `Nano Banana 2`
-- `textToVideoVideoModel`: `klingai/video-v3-standard-image-to-video` (the persisted app default; recommend `bytedance/seedance-2-0-mini` for cost). **Never** send `google/veo-3.1-i2v-fast` — retired 2026-07-24 and rejected by validation on write
+- `textToVideoVideoModel`: `bytedance/seedance-2-0-mini` — the server catalog marks it the `text_to_video` default, and it is also the cheapest. **Do not assume a persisted default**: read the current value with `read_project_settings` → `SCRTIPT_TO_VIDEO.text_to_video_video_model` and set it explicitly with `set_text_to_video_settings`. **Never** send `google/veo-3.1-i2v-fast` (retired 2026-07-24, rejected by validation on write) or `custom:happyhorse-1.0` (passes validation, then fails at generation — disabled catalog row)
 - `textToVideoReferenceImagePaths`: `[]`
 
 ## Common failures

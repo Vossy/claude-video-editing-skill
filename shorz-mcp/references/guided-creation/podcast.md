@@ -43,6 +43,7 @@ Word the options in the format they just chose — "side-by-side" for 16:9, "sta
 This answer gates the transitions question in Q7 — skip transitions entirely for `Show Both Avatars` on a non-square project, where they are a no-op.
 
 ### Q5 — The two speakers (host, then guest; both MANDATORY)
+> **WIDGET STEP — mandatory when `show_widget` exists (it may be deferred: ToolSearch for it first; see `widgets.md`). Do not call the file picker or write the setting until the widget's button phrase comes back.** (Template A) when `show_widget` exists: two cards — *Interviewer* and *Interviewee* — both required, both with *Generate with AI*; `extensions: ["jpg","jpeg","png","webp"]`. Never continue with an empty slot. Only if no `show_widget` tool can be found: use the options below.
 For each role:
 1. **Generate with AI from a description** (Recommended; suggest matching styles so the two heads look coherent)
 2. A photo of a specific real person (≤3 face reference photos, JPEG/PNG/WebP → identity-preserving generation)
@@ -52,6 +53,7 @@ For each role:
 Never reach the summary with an empty slot.
 
 ### Q6 — Voices (fetch live — no static list)
+> **WIDGET STEP — mandatory when `show_widget` exists (it may be deferred: ToolSearch for it first; see `widgets.md`). Do not call the file picker or write the setting until the widget's button phrase comes back.** (Template C) when `show_widget` exists: one widget per role (title "Interviewer voice", then "Interviewee voice"); pre-filter to the pairing recommended here. Only if no `show_widget` tool can be found: use the options below.
 `list_elevenlabs_voices` first, then offer pairings:
 1. **Warm male host + bright female guest** (Recommended)
 2. Bright female host + warm male guest
@@ -65,6 +67,7 @@ Offer per-role TTS previews (`generate_tts_preview`). BYO ElevenLabs key → clo
 **Transitions** — ask ONLY when Q4 = `Show Only Talking Avatar` or the project is 1:1: 1. **None** (Recommended) · 2. One subtle light leak · 3. Mix of 3 · 4. All 20 (`Transition01`–`Transition20`; each carries a whoosh at the Sound Effects volume).
 
 ### Q8 — Quality + extras (batch)
+> **WIDGET STEP — mandatory when `show_widget` exists (it may be deferred: ToolSearch for it first; see `widgets.md`). Do not call the file picker or write the setting until the widget's button phrase comes back.** (Template B) when `show_widget` exists: avatar-model cards (Kling Avatar Pro · Kling Avatar · OmniHuman 1.5) — the pick still goes to `set_avatar_settings`, not `set_podcast_settings`; ask subtitles + look note with the question tool afterwards. Only if no `show_widget` tool can be found: use the options below.
 **Avatar model** (biggest cost lever — set via `set_avatar_settings`, NOT `set_podcast_settings`):
 1. **Kling Avatar Pro — balanced** (Recommended)
 2. Kling Avatar — cheapest

@@ -11,7 +11,7 @@ Generate, compile, or export Remotion-style animations via MCP. **Project target
 | **`get_current_open_project`** / **`list_projects`** | Resolve **`outputPath`** directory (absolute paths). See **`README.md`** targeting rules. |
 | **`animation_studio_open_modal`** | Opens the Animation Studio modal (optional if the next **`animation_studio_send_compile_export`** uses default **`openModal: true`**). **Required** before a UI export if the modal is closed and you rely on the UI workflow (otherwise the app may queue the payload until the modal opens). |
 | **`animation_studio_close_modal`** | Closes the modal. Use when a task ends without **`closeModal: true`** on export, or after **`animation_studio_send_message`** / **`animation_studio_send_and_compile`**. |
-| **`animation_studio_list_models`** | Returns supported **`model`** ids for this build (static list). Call when the user asks for a non-default model or you need the exact **`id`** string. |
+| **`animation_studio_list_models`** | Returns supported **`model`** ids. **Not a static list** — it fetches the **live server catalog** (same `main_ai` category as the PromptBar picker) and only falls back to a bundled snapshot when the catalog is unreachable; the response's **`source`** field says which (**`live-catalog`** or **`bundled-fallback`**). Call it whenever the user asks for a non-default model or you need the exact **`id`** string, and prefer its ids over any list written down here. |
 | **`animation_studio_send_message`** | **Headless AIML chat only** — does **not** open Animation Studio, does **not** apply the in-app Remotion system prompt. **`messages`** is **required** (MCP schema). Optional **`systemPrompt`** is merged **before** `messages`. Use for brainstorming copy outside the panel, or supply your own full **`systemPrompt`** if you truly need raw chat completions. **Not** the normal way to drive the Animation Studio UI. |
 | **`animation_studio_send_and_compile`** | **Headless:** AIML → extract code → **`compile-remotion-preview`**. **`prompt`** and/or **`messages`** (at least one must yield a user turn after merge). No MP4; response includes **`compileResult`**. When **`systemPrompt`** is omitted, the server injects a default Remotion system prompt + **fixed** timing note (**150 / 30**); custom **`systemPrompt`** replaces that block (no auto timing append). |
 | **`animation_studio_send_compile_export`** | End-to-end: AIML → compile → MP4 at **`outputPath`**. Behavior splits on **`visualizeInUi`** (see **UI-driven vs headless**). Defaults: **`visualizeInUi`** **true**, **`openModal`** **true**, **`closeModal`** **true**, **`durationInFrames`** **150**, **`fps`** **30**, **`requireCodeFence`** **false**, **`fallbackToRawAssistantText`** **true**. |
@@ -59,6 +59,29 @@ Describe **ideas only**: mood, story, palette, pacing in plain language, on-scre
 
 ---
 
+## Briefing for launch-film quality (and the SFX cue sheet)
+
+The in-app system prompt carries a **MOTION CRAFT STANDARD** (`frontend/src/prompts/remotionMotionCraft.prompt.txt`)
+distilled from frame-by-frame study of ElevenLabs' launch films: expo easing and a strict timing grammar,
+continuity by transformation (shape → grid → morph → next scene) instead of flashes or crossfades, solid
+panel wipes for scene changes, stepped geometric builds on hairline guides, editorial type (one sans,
+word-by-word rises, dim→bright reveals, character scrambles, highlight pills), counters on growing bars,
+faithful UI moments (curved cursor paths, press + ripple, typing), and timelines that visibly trim,
+re-order and stack tracks. You do not need to repeat those rules — brief the *content*:
+
+- Name each beat, the on-screen words, and what transforms into what. "The prompt bar collapses into a
+  dot that becomes the first clip on a timeline" gets better motion than "then show a timeline".
+- Attach real UI screenshots as `imageReferences` whenever a product surface appears — the prompt tells the
+  model to reproduce attached UI faithfully rather than invent one. Attach real logos the same way.
+- Keep each run to ~5 s / 3–4 beats (see size limits below); state the start state of every segment after
+  the first so the seams continue.
+
+**Sound design comes back with the export.** A successful in-app export returns
+`sfxCues: [{ t, sound }]` (seconds from the segment start) and writes them beside the MP4 as
+`<outputPath>.sfx.json`. Score each cue with `generate_sound_effect` (`text` = the cue's `sound`,
+`durationSeconds` to fit the motion) and mix them in with ffmpeg `adelay` at `t` (plus the segment's
+offset in the finished film). Cues are the model's own timing, so spot-check a few against the frames.
+
 ## Composition size limits (generation and export)
 
 Two separate ceilings, both measured. Neither is the `durationInFrames` clamp (**3600**).
@@ -101,16 +124,17 @@ The lineup is **server-driven** (proxy catalog `main_ai` category — same list 
 
 | Label (`animation_studio_list_models`) | AIML `model` id |
 |---|---|
-| `Opus 5` | `anthropic/claude-opus-5` |
-| `Fable 5` | `anthropic/claude-fable-5` |
+| `Opus 5.5` | `anthropic/claude-opus-5-5` (the default; replaced Opus 5 on 2026-09-22 by migration `0051` — 1 / 3 credits per 1k, down from 1 / 4) |
+| `Fable 5.1` | `anthropic/claude-fable-5-1` |
 | `Sonnet 5` | `anthropic/claude-sonnet-5` (re-enabled 2026-08-10 by migration `0033`; ~0.4 / 2 credits per 1k tokens) |
-| `GPT 5.6 Terra` | `openai/gpt-5-6-terra` |
-| `GPT 5.6 Sol` | `openai/gpt-5-6-sol` |
+| `GPT 6 Sol` | `openai/gpt-6-sol` (replaced GPT 5.6 Terra and Sol on 2026-09-23 by migration `0052`; 1 / 2 credits per 1k) |
+| `GPT 6 Luna` | `openai/gpt-6-luna` (added 2026-09-23 by migration `0052`; ~0.01 / 0.07 credits per 1k) |
+| `GPT 6 Astra` | `openai/gpt-6-astra` (added 2026-09-05 by migration `0042`; 2 / 7 credits per 1k, the priciest row) |
 | `Gemini 3.7 Flash` | `google/gemini-3.7-flash` (cheapest main-AI tier, ~0.2 / 1 credits per 1k tokens) |
 
-- **`animation_studio_list_models`** — optional; returns the live catalog lineup (bundled snapshot when the catalog is unreachable — the snapshot matches the six models above, but only the live catalog reflects server-side additions).
-- **Default model** when **`model`** is omitted: **`anthropic/claude-opus-5`**. Override only when asked.
-- **Retired (do not pass):** `anthropic/claude-opus-4-6`, `anthropic/claude-opus-4-7`, `anthropic/claude-opus-4-8` — no longer in the UI selector. (`anthropic/claude-sonnet-5` was retired by `0017` but **re-enabled by `0033` on 2026-08-10** — it is a valid choice again.) The proxy still resolves `claude-opus-4-8` through a disabled legacy-alias catalog row so older saved projects keep working, but it is not a valid choice for new work.
+- **`animation_studio_list_models`** — optional; returns the live catalog lineup (bundled snapshot when the catalog is unreachable — the snapshot matches the seven models above, but only the live catalog reflects server-side additions).
+- **Default model** when **`model`** is omitted: **`anthropic/claude-opus-5-5`**. Override only when asked.
+- **Retired (do not pass):** `anthropic/claude-opus-4-6`, `anthropic/claude-opus-4-7`, `anthropic/claude-opus-4-8`, `anthropic/claude-opus-5`, `anthropic/claude-fable-5` — no longer in the UI selector. (`anthropic/claude-sonnet-5` was retired by `0017` but **re-enabled by `0033` on 2026-08-10** — it is a valid choice again.) The proxy still resolves `claude-opus-4-8`, `claude-opus-5` and `claude-fable-5` through disabled legacy-alias catalog rows so older saved projects keep working — `claude-fable-5` transparently serves **Fable 5.1** at the identical rate since migration `0041`, and `claude-opus-4-8`/`claude-opus-5` serve **Opus 5.5** at the new, cheaper rate since `0051` — but none is a valid choice for new work: pass **`anthropic/claude-opus-5-5`** / **`anthropic/claude-fable-5-1`**.
 - **Order:** resolve project → open modal if needed → optional **`animation_studio_list_models`** → **`animation_studio_send_*`**.
 
 ---

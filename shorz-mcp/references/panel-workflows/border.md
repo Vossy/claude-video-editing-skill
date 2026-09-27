@@ -7,6 +7,7 @@ Cross-project border toggle, width, colors, animation, and duration. Project tar
 When **`border`** is on, Shorz draws a **picture frame** around the **edges of the main video preview** (a ring that sits on the outer rim of the composited picture, not a margin around the whole app). **`borderWidth`** controls how thick that rim is.
 
 - **`borderAnimation` = `None`** — the ring is a **solid band** in **`borderColor1`** (the second color is not used for this static look).
+- The ring is drawn **inside** the frame, so the exported video keeps its **original resolution and aspect ratio** (a 1080x1920 short stays 1080x1920 — the border never pads the video out to 1180x2020). A thick border covers more of the picture's outer rim; it does not make the file bigger.
 - **Any other animation** — the ring uses a **blend between `borderColor1` and `borderColor2`**, and the chosen style **moves or changes** that border over time; **`borderAnimationDuration`** sets how long one full cycle of that motion takes (seconds).
 
 The same project values are what the user tweaks in the **Border** sidebar and what will carry into **exported/generated video** for that project, so describing it as a configurable colored frame around the video helps set expectations.

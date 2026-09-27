@@ -110,7 +110,7 @@ All overlay types use **center-X / top-Y percent** (0–100), matching title/sub
 
   - `aiBrollType`: `"image"` (generated stills) or `"video"` (generated text-to-video clips). Video clips cost roughly 10–30× more per placement than stills.
 
-  - `aiBrollImageModel`: image generator for type `image` — server-catalog id (project type `broll`), e.g. `"Nano Banana 2"`, `"Nano Banana 2 Lite"`, `"GPT Image 2"`.
+  - `aiBrollImageModel`: image generator for type `image` — server-catalog id (project type `broll`), e.g. `"Nano Banana 2"`, `"Nano Banana 2 Lite"`, `"GPT Image 2"` (the `GPT Image 2` id now serves GPT Image 2.5 Flare — fast), `"GPT Image 2.5 Sunburst"` (sharper, slightly slower, same 2 credits per still).
 
   - `aiBrollVideoModel`: video generator for type `video` — server-catalog id (project type `broll`), e.g. `"gemini-omni-flash-preview"` (native route, token-billed ~12 cr/s, 1–10s), `"bytedance/seedance-2-0-fast"`, `"bytedance/seedance-2-0"`, `"bytedance/seedance-2-0-mini"`, `"bytedance/seedance-2-5"` (premium, ~27 cr/s — rarely worth it for short overlay clips), `"klingai/video-v3-standard-text-to-video"`.
 
@@ -259,6 +259,22 @@ There are **no settings keys** for these — they are driven entirely by **user 
 - **Prerequisite is unchanged:** the asset must be imported to the BROLL lane
   (`import_frontend_assets` with `assetType: "broll"`), and the instructions must use the exact
   file name so the placement AI can match it.
+- **Anchor an end-card to the LAST sentence explicitly, and rule out the near misses.** Verified in
+  a 4-minute production run: "at the very end, right after the final line about X" put a subscribe
+  overlay on the *penultimate* beat and it had finished before the closing line played. The model
+  treats "the very end" as a region, not a boundary. What works is naming the closing words, saying
+  nothing may follow, and listing the sentences it must NOT pick — e.g. *"on the VERY LAST sentence
+  of the narration, the one that ends with the words '…smell of rain'. Nothing may come after it.
+  Do NOT anchor it to 'Blue. Very small.' or 'Two hundred million miles away.' It must still be on
+  screen when the narration stops."* Check the anchor with `extract_video_frames` before shipping;
+  a mis-anchored end card is the most likely defect in an otherwise correct render.
+- **Persistent overlays composite above covering B-roll as documented** — verified live: a
+  9%-width `logo.png` pinned top-right held every frame of a 3:43 film, including across fullscreen
+  image B-roll and across the chroma-keyed subscribe overlay itself.
+- **Un-instructed BROLL assets are placed on meaning, not filler.** In the same run, twelve NASA
+  stills carrying no instructions were placed on lines they actually illustrate (the
+  before/after dust-storm pair landed on "the sun spent a billion patient years stripping the air
+  off it"). Importing more un-instructed assets than the edit needs is the right way to use this.
 
 ## Instruction handling rules
 
