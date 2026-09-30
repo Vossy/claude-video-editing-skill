@@ -3,7 +3,7 @@
 The general-purpose type: the user's own footage/photos → ONE finished edited video. No dedicated panel — the flow is assets → what it's about → brief → optional panel features → Create Video. Follow `README.md` protocol. Tool semantics: `references/project-workflows/auto-edit.md`.
 
 **Route here when:** "edit my footage", montage, highlight reel, vlog edit, slideshow from photos, "tighten this interview", "make a video from these files".
-**Route away:** N separate short files from one long video → `clipping` (auto-edit always outputs ONE video); no footage at all → `text-to-video`; talking avatar / podcast / product ad → those types.
+**Route away:** N separate short files from one long video → `clipping` (auto-edit always outputs ONE video); no footage at all → `text-to-video`, or `music-video` when the input is a song to visualize (their own footage cut to a song stays here — MUSIC lane + beat sync); talking avatar / podcast / product ad → those types.
 
 **Two internal paths, chosen by main-asset count:** 1 asset → single-asset tool-call editing. 2+ assets → multi-asset montage planner. The branch matters less than it looks: the single-asset path can hand off to the same content-aware planner, so **filler-word removal and transitions between segments both work with one file**. Only two things are genuinely multi-asset-only: **beat sync** (no music data reaches the single-asset planner) and **chronological ordering** (meaningless inside one clip).
 

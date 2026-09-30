@@ -18,7 +18,7 @@ The Avatar panel shows:
 
 Create Video renders the avatar speaking the script (or the audio) with the chosen motion style.
 
-**Main VIDEO (“Import Main Assets”)** — **`avatar`** projects **do not** expose the timeline main VIDEO lane in the Electron UI (`isMainAssetsLaneEnabled` excludes `podcast`/`avatar`/`advertisement`). `import_frontend_assets` with **`assetType: "video"`** is **rejected with an error** here (headless `overridePaths` path); use **`select_avatar_image`**, **`save_avatar_image`**, and audio helpers for character media, or **`assetType: "broll"`** for supporting footage (**SKILL.md** → *Main VIDEO import*).
+**Main VIDEO (“Import Main Assets”)** — **`avatar`** projects **do not** expose the timeline main VIDEO lane in the Electron UI (`isMainAssetsLaneEnabled` excludes `podcast`/`avatar`/`advertisement`/`music-video`). `import_frontend_assets` with **`assetType: "video"`** is **rejected with an error** here (headless `overridePaths` path); use **`select_avatar_image`**, **`save_avatar_image`**, and audio helpers for character media, or **`assetType: "broll"`** for supporting footage (**SKILL.md** → *Main VIDEO import*).
 
 ## Tool contract
 

@@ -17,6 +17,7 @@ Some wizard steps are better as a **card widget** than as a 4-option question: p
 |---|---|
 | `Open the Shorz file picker for the <slot> image` | `select_local_image_for_import { options: { title: "Select <Slot> image", extensions: [<allowed>] } }` (blocks until the dialog closes). `canceled` → re-render the same widget untouched. Otherwise apply the path with the flow's select tool (table in the flow file), then re-render the widget with that slot marked **Selected · file.png**; when no required slot is empty, continue to the next step. |
 | `Use <path> as the <slot> image` | Same as above without the dialog: `file_exists`, check the extension, apply, re-render. |
+| `Use <path> as the song` | Music video song slot (there is no audio file dialog over MCP, so this is the only song phrase): check the extension (`.mp3 .wav .m4a .ogg .flac`), probe it with `get_media_info { inputPath }`, report the length, and continue to the next step. The copy into the project (`select_music_video_audio`) runs at execution. |
 | `Generate the <slot> image with AI` | Run the flow's generate branch (it will ask for a description with the question tool), apply the output, re-render. |
 | `Skip the <slot> image` | Only ever offered on optional slots. Leave it empty, re-render. |
 | `Use <model label> as the <role> model` | Map the label to its id from the flow file and write it with the flow's `set_*_settings` call; continue. |
@@ -27,7 +28,7 @@ If a message matches none of these, treat it as the user's free text for the cur
 
 ## Template A — Image slot picker
 
-Use for: advertisement product / character (Q3), avatar presenter image + own angle images, podcast interviewer / interviewee, text-to-video style / character / environment references. One card per slot. Slots that allow generation get the AI button; only optional slots get Skip. `--bg-accent` border on the first empty required slot.
+Use for: advertisement product / character (Q3), avatar presenter image + own angle images, podcast interviewer / interviewee, text-to-video style / character / environment references, music video artist (optional). One card per slot. Slots that allow generation get the AI button; only optional slots get Skip. `--bg-accent` border on the first empty required slot.
 
 ```html
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;padding:0.5rem 0 1rem;">
@@ -66,9 +67,26 @@ Use for: advertisement product / character (Q3), avatar presenter image + own an
 **Selected state** (re-render after a pick): replace the buttons with
 `<div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-success)"><i class="ti ti-check" aria-hidden="true"></i> Selected · product.png</div>` plus a single `Change ↗` button that sends the file-picker phrase again. Multi-image slots (angles ≤3, style refs ≤3, characters ≤4) show `n / max` in the badge and keep the picker button until the cap.
 
+**Song slot (music video Q1)** — same card, but audio has no file dialog over MCP, so it carries only the path field; once the length is known, re-render it as selected with `Selected · song.mp3 · 3:12`.
+
+```html
+<div style="background:var(--surface-2);border:2px solid var(--border-accent);border-radius:12px;padding:1rem 1.25rem;max-width:420px;">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+    <i class="ti ti-music" style="font-size:20px;color:var(--text-secondary)" aria-hidden="true"></i>
+    <span style="font-size:15px;font-weight:500;color:var(--text-primary)">Song</span>
+    <span style="margin-left:auto;font-size:12px;padding:2px 8px;border-radius:var(--radius);background:var(--bg-accent);color:var(--text-accent)">Required</span>
+  </div>
+  <p style="margin:0 0 12px;font-size:13px;color:var(--text-secondary)">MP3, WAV, M4A, OGG or FLAC on this computer</p>
+  <div style="display:flex;gap:8px;">
+    <input id="p-song" type="text" placeholder="C:\Users\you\Music\song.mp3" style="flex:1;min-width:0;" />
+    <button onclick="var v=document.getElementById('p-song').value.trim();if(v){sendPrompt('Use '+v+' as the song')}">Use path ↗</button>
+  </div>
+</div>
+```
+
 ## Template B — Model picker
 
-Use for: avatar / podcast avatar model, text-to-video image + video model. Cards in the flow's order, recommended first with the accent border and a "Recommended" badge; the price line quotes the rate from the flow file / live catalog; the fit line is the flow's one-sentence note (e.g. the clip-cap warning). Only models the flow allows in that branch.
+Use for: avatar / podcast avatar model, text-to-video image + video model, music video video + image model. Cards in the flow's order, recommended first with the accent border and a "Recommended" badge; the price line quotes the rate from the flow file / live catalog; the fit line is the flow's one-sentence note (e.g. the clip-cap warning). Only models the flow allows in that branch.
 
 ```html
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;padding:0.5rem 0 1rem;">

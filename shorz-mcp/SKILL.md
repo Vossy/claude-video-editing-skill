@@ -1,6 +1,6 @@
 ---
 name: shorz-mcp
-description: Control Shorz via MCP to create and edit projects, configure panels, import assets, generate videos and thumbnails, publish to YouTube or TikTok, and run headless single-file video/image edits (no project required).
+description: Control Shorz via MCP to create and edit projects, configure panels, import assets, generate videos and thumbnails, build and run Canvas node graphs, publish to YouTube or TikTok, and run headless single-file video/image edits (no project required).
 ---
 
 # Shorz MCP Server Agent Skill
@@ -33,6 +33,7 @@ When the user expresses **intent to make a video or asset without the concrete i
 | talking head / AI presenter | `references/guided-creation/avatar.md` |
 | two-person dialogue / AI podcast | `references/guided-creation/podcast.md` |
 | ad / promo for my product | `references/guided-creation/advertisement.md` |
+| music video for my song / visualize this track | `references/guided-creation/music-video.md` |
 | thumbnail / cover image | `references/guided-creation/thumbnail-creator.md` |
 | animated intro, logo reveal, kinetic text, title card | `references/guided-creation/animation-studio.md` |
 
@@ -45,11 +46,12 @@ Each flow asks a short option-driven sequence (interactive question tool when av
 | `projectType` | Workflow file | Primary MCP tools |
 |---|---|---|
 | `auto-edit` | `references/project-workflows/auto-edit.md` | Panel `set_*_settings` (subtitle, title, border, audio, overlay, broll, general video) + `switch_project_aspect_ratio` |
-| `auto-edit` — **edit an already rendered video** | `references/project-workflows/edit-generated-video.md` | `edit_generated_video` (one plain-text instruction → new version; everything else pinned) |
+| `auto-edit` / `text-to-video` — **edit an already rendered video** | `references/project-workflows/edit-generated-video.md` | `edit_generated_video` (one plain-text instruction → new version; everything else pinned) |
 | `text-to-video` | `references/project-workflows/text-to-video.md` | `set_text_to_video_settings`, `save_text_to_video_speech_audio`, `save_text_to_video_reference_images` |
 | `avatar` | `references/project-workflows/avatar.md` | `set_avatar_settings`, `select_avatar_image`, `select_avatar_angle_image`, `select_avatar_audio`, `save_avatar_image`, `save_avatar_audio` |
 | `podcast` | `references/project-workflows/podcast.md` | `set_podcast_settings`, `select_podcast_avatar_image`, `list_elevenlabs_voices` |
 | `advertisement` | `references/project-workflows/advertisement.md` | `set_advertisement_settings`, `select_advertisement_image`, `remove_advertisement_image` |
+| `music-video` | `references/project-workflows/music-video.md` | `select_music_video_audio`, `set_music_video_settings`, `remove_music_video_audio`, `select_music_video_character_image`, `remove_music_video_character_image` |
 | `clipping` | `references/project-workflows/clipping.md` | `update_project_settings` (`CLIPING`, `ASSET_PATHS`), `download_social_video`, `switch_project_aspect_ratio` |
 
 ### Headless workflows (no project, no `projectType`)
@@ -94,13 +96,14 @@ Open **`references/creative-strategy/content-brainstorming.md`** when the user a
 | Text → headline / banner | `references/panel-workflows/title.md` | `set_title_settings` |
 | Thumbnail Creator (modal) | `references/panel-workflows/thumbnail-creator.md` | `open_thumbnail_creator`, `set_thumbnail_creator_settings`, `thumbnail_creator_generate`, `get_thumbnail_creator_generation_status` |
 | Animation Studio (modal) | `references/panel-workflows/animation-studio.md` | `animation_studio_*`, `compile_remotion_preview`, `remotion_render` |
+| Canvas (node-graph video builder, ⋮ → Canvas; no project) | `references/panel-workflows/canvas.md` | `canvas_list`, `canvas_get`, `canvas_build`, `canvas_run` (+ `get_job_status`) |
 | Your Library (VIDEO / BROLL / SOUND / MUSIC) | `references/panel-workflows/your-library-assets.md` | `update_project_settings` (`ASSET_PATHS`); `delete_asset` only when deleting files on disk |
 
 The **Text** sidebar shows subtitles and titles together but uses **two** tools with **two** key families (`subtitle*` vs `title*`). Never send subtitle keys to `set_title_settings` or vice versa — for both kinds, call each tool once with a minimal patch.
 
 ### Main VIDEO import (“Import Main Assets”) vs project type
 
-In the Electron app, **`import_frontend_assets`** with `assetType: "video"` mirrors the UI **Import Main Assets** lane (fills the main timeline / `assets.VIDEOS`, which persists to **`ASSET_PATHS.main_video_asset_paths`** on save alongside other library categories). The single source of truth is **`isMainAssetsLaneEnabled`** (`frontend/src/utils/mediaAssetUtils.ts`): the main VIDEOS lane is **disabled** for **`podcast`**, **`avatar`**, **`advertisement`**, and for **`text-to-video`** unless **`textToVideoSourceMedia === "imported"`**. That rule gates the UI (import button, Your Library → VIDEOS tab, timeline strip) **and is enforced main-process-side**: a headless `import_frontend_assets` call with `overridePaths` and `assetType: "video"` into a lane-disabled open project is **rejected with an error** (redirecting to `"broll"`) instead of persisting `main_video_asset_paths`. Match this in guidance: never tell users they can “add main timeline videos” in templates that hide or disable main-video import.
+In the Electron app, **`import_frontend_assets`** with `assetType: "video"` mirrors the UI **Import Main Assets** lane (fills the main timeline / `assets.VIDEOS`, which persists to **`ASSET_PATHS.main_video_asset_paths`** on save alongside other library categories). The single source of truth is **`isMainAssetsLaneEnabled`** (`frontend/src/utils/mediaAssetUtils.ts`): the main VIDEOS lane is **disabled** for **`podcast`**, **`avatar`**, **`advertisement`**, **`music-video`**, and for **`text-to-video`** unless **`textToVideoSourceMedia === "imported"`**. That rule gates the UI (import button, Your Library → VIDEOS tab, timeline strip) **and is enforced main-process-side**: a headless `import_frontend_assets` call with `overridePaths` and `assetType: "video"` into a lane-disabled open project is **rejected with an error** (redirecting to `"broll"`) instead of persisting `main_video_asset_paths`. Match this in guidance: never tell users they can “add main timeline videos” in templates that hide or disable main-video import.
 
 | `projectType` | Main VIDEO import in UI (timeline / PromptBar gateway) | Your Library shows VIDEOS tab |
 |---|---|---|
@@ -110,8 +113,9 @@ In the Electron app, **`import_frontend_assets`** with `assetType: "video"` mirr
 | `avatar` | **No** (`canImportMainAssets` false) | **No** |
 | `podcast` | **No** (`canImportMainAssets` false) | **No** |
 | `advertisement` | **No** (main lane disabled) — **workflow is reference stills**, not a main VIDEO lane — use **`select_advertisement_image`** / **`import_frontend_assets`** with **`image`** | **No** (tab hidden) |
+| `music-video` | **No** — the input is the song (**`select_music_video_audio`**); the MUSIC lane is off too, and a headless `"music"` import is **rejected with an error** | **No** (VIDEOS and MUSIC tabs hidden) |
 
-**Agents:** Use **`avatar`**, **`podcast`**, **`advertisement`**, **`text-to-video`** (unless `imported`) workflows for their **typed** inputs (still images, avatars, product/person images, script/audio, generated sources). `import_frontend_assets` with **`video`** into these projects is **rejected with an error** (headless `overridePaths` path) — import supporting footage as **`broll`**, which every project type keeps.
+**Agents:** Use **`avatar`**, **`podcast`**, **`advertisement`**, **`music-video`**, **`text-to-video`** (unless `imported`) workflows for their **typed** inputs (still images, avatars, product/person images, script/audio, generated sources). `import_frontend_assets` with **`video`** into these projects is **rejected with an error** (headless `overridePaths` path) — import supporting footage as **`broll`**, which every project type keeps.
 
 ### One asset per file name (every library lane)
 
@@ -129,8 +133,9 @@ The PromptBar (`set_user_instructions` → `UI_SETTINGS.user_input_instructions`
 | `podcast` | Optional B-roll / music / SFX guidance — **not the dialogue**. Can also arrange imported music (order, sections, placement, volume, fades, mix) | `podcastScript` with `[Interviewer]` / `[Interviewee]` line tags |
 | `advertisement` | Ad creative brief | Product/person images via `set_advertisement_settings` |
 | `clipping` | **Optional** — only when steering topics, clip length, platform, or hooks | Source video at `ASSET_PATHS.main_video_asset_paths` |
+| `music-video` | The creative brief — concept, look, who appears, how each section should feel (**never the lyrics**) | The song, set with `select_music_video_audio` (`MUSIC_VIDEO.music_video_audio_path`); the lyrics are transcribed from it at render time |
 
-**Rule:** Never overwrite PromptBar with a script for `avatar`, `podcast`, or `text-to-video`. Put the spoken text in the panel field listed above.
+**Rule:** Never overwrite PromptBar with a script for `avatar`, `podcast`, or `text-to-video`, or with lyrics for `music-video`. Put the spoken text in the panel field listed above.
 
 **Referencing a specific asset:** to point the brief at one file in the project library, write its **filename in double quotes** — `use "intro.mp4" as the opener`. That is exactly what the desktop app's `@` picker and its drag-from-timeline shortcut insert, and the app renders any such reference as a pill. Get the real filenames from `read_project_settings` (`ASSET_PATHS`) or `get_video_assets` / `get_audio_assets` first — a name that isn't in the library is just prose to the analyzers.
 
@@ -142,10 +147,10 @@ The PromptBar **model dropdown** (all project types) selects which AIML chat mod
 
 | MCP tool | Persistence | Allowed values |
 |---|---|---|
-| `set_main_ai_model` | `AI_MODEL.main_ai_model_name` | Server-driven — call **`list_main_ai_models`** for the live lineup and pass an id from its response. At time of writing: `anthropic/claude-opus-5-5` (Opus 5.5, default), `anthropic/claude-fable-5-1` (Fable 5.1), `anthropic/claude-sonnet-5` (Sonnet 5, re-enabled 2026-08-10 — 1 / 2 credits per 1k, the cheapest Claude), `openai/gpt-6-sol` (GPT 6 Sol — 1 / 2 credits per 1k; replaced both GPT 5.6 tiers on 2026-09-23, whose old ids now silently serve Sol), `openai/gpt-6-luna` (GPT 6 Luna, added 2026-09-23 — ~0.01 / 0.07 credits per 1k, the cheapest paid row), `openai/gpt-6-astra` (GPT 6 Astra, OpenAI's flagship, added 2026-09-05 — 2 / 7 credits per 1k, the priciest row; the proxy serves every GPT 6 model over OpenAI's Responses API, which is what lets Astra call function tools at all), `google/gemini-3.7-flash` (Gemini 3.7 Flash, ~0.2 / 1 credits per 1k tokens — much cheaper than Opus 5.5; a normal paid-selectable model billed like any other, **and** the only id a free run zero-rates) — seven models; treat that as a snapshot, not an allowlist. This model also drives image / video-frame asset analysis, including key-subject localization. **On a free-tier run** (`auto-edit` / `clipping`, zero-balance user) only `google/gemini-3.7-flash` is zero-rated — the in-app picker locks itself to it, but the MCP path does not, so **you** must `set_main_ai_model` (or pass `mainAiModelName`) with that id or the render bills and 402s |
+| `set_main_ai_model` | `AI_MODEL.main_ai_model_name` | Server-driven — call **`list_main_ai_models`** for the live lineup and pass an id from its response. At time of writing: `anthropic/claude-opus-5-5` (Opus 5.5, default), `anthropic/claude-fable-5-1` (Fable 5.1), `anthropic/claude-sonnet-5-5` (Sonnet 5.5 — replaced Sonnet 5 on 2026-09-28 by migration `0054`, whose old id still resolves to it; 1 / 2 credits per 1k, the cheapest Claude), `openai/gpt-6-1-sol` (GPT 6.1 Sol — 1 / 2 credits per 1k; replaced GPT 6 Sol on 2026-09-30 at the same price, and `openai/gpt-6-sol` plus both old GPT 5.6 ids now silently serve 6.1 Sol), `openai/gpt-6-luna` (GPT 6 Luna, added 2026-09-23 — ~0.01 / 0.07 credits per 1k, the cheapest paid row), `openai/gpt-6-astra` (GPT 6 Astra, OpenAI's flagship, added 2026-09-05 — 2 / 7 credits per 1k, the priciest row; the proxy serves every GPT 6 model over OpenAI's Responses API, which is what lets Astra call function tools at all), `google/gemini-3.7-flash` (Gemini 3.7 Flash, ~0.2 / 1 credits per 1k tokens — much cheaper than Opus 5.5; a normal paid-selectable model billed like any other, **and** the only id a free run zero-rates) — seven models; treat that as a snapshot, not an allowlist. This model also drives image / video-frame asset analysis, including key-subject localization. **On a free-tier run** (`auto-edit` / `clipping`, zero-balance user) only `google/gemini-3.7-flash` is zero-rated — the in-app picker locks itself to it, but the MCP path does not, so **you** must `set_main_ai_model` (or pass `mainAiModelName`) with that id or the render bills and 402s |
 
 - **Read current model:** `read_project_settings` → `AI_MODEL.main_ai_model_name`.
-- **Before Create Video:** When the user names Opus, Fable, GPT 6 Sol, GPT 6 Luna, GPT 6 Astra, Gemini 3.7 Flash, or a specific model id, call **`set_main_ai_model`** before **`trigger_create_video`** / **`generate_video`**, or pass **`mainAiModelName`** on **`trigger_create_video`** for a one-shot run (persists to disk first, matching the UI dropdown at generate time).
+- **Before Create Video:** When the user names Opus, Fable, GPT 6.1 Sol, GPT 6 Luna, GPT 6 Astra, Gemini 3.7 Flash, or a specific model id, call **`set_main_ai_model`** before **`trigger_create_video`** / **`generate_video`**, or pass **`mainAiModelName`** on **`trigger_create_video`** for a one-shot run (persists to disk first, matching the UI dropdown at generate time).
 - **Live UI:** Patches go through `update-project-settings`; the open app reloads the dropdown from disk (unlike PromptBar text, the model selector rarely races with in-memory UI state).
 
 ### Animation Studio chat model
@@ -157,7 +162,7 @@ The Animation Studio modal has its **own** model picker (labels like `claude-opu
 | `animation_studio_list_models` | Supported chat **`model`** ids for this build |
 | `animation_studio_send_*` optional **`model`** | Per-call override; default **`anthropic/claude-opus-5-5`** |
 
-**Allowed ids:** server-driven — `animation_studio_list_models` returns the live lineup (same `main_ai` catalog category as the PromptBar picker; at time of writing seven: Opus 5.5, Fable 5.1, Sonnet 5, GPT 6 Sol, GPT 6 Luna, GPT 6 Astra, Gemini 3.7 Flash). Call it and pass an id from the response rather than one from this page. **`anthropic/claude-opus-4-6`**, **`anthropic/claude-opus-4-7`** and **`anthropic/claude-opus-4-8`** are retired from the selector — use **`anthropic/claude-opus-5-5`** instead. (**`anthropic/claude-sonnet-5`** was retired by `0017` but **re-enabled by `0033`** on 2026-08-10 — it is selectable again.) (The proxy still resolves `anthropic/claude-opus-4-8` via a disabled legacy-alias catalog row so older saved projects keep working, but do not pass it for new work.) Full workflow: **`references/panel-workflows/animation-studio.md`** → *Model selection*.
+**Allowed ids:** server-driven — `animation_studio_list_models` returns the live lineup (same `main_ai` catalog category as the PromptBar picker; at time of writing seven: Opus 5.5, Fable 5.1, Sonnet 5.5, GPT 6.1 Sol, GPT 6 Luna, GPT 6 Astra, Gemini 3.7 Flash). Call it and pass an id from the response rather than one from this page. **`anthropic/claude-opus-4-6`**, **`anthropic/claude-opus-4-7`** and **`anthropic/claude-opus-4-8`** are retired from the selector — use **`anthropic/claude-opus-5-5`** instead. (**`anthropic/claude-sonnet-5-5`** is the Sonnet in the selector since `0054` on 2026-09-28; `anthropic/claude-sonnet-5` still resolves to it through a disabled legacy-alias row.) (The proxy still resolves `anthropic/claude-opus-4-8` via a disabled legacy-alias catalog row so older saved projects keep working, but do not pass it for new work.) Full workflow: **`references/panel-workflows/animation-studio.md`** → *Model selection*.
 
 ### Project targeting rules (apply to every **project** workflow)
 
@@ -174,7 +179,7 @@ The Animation Studio modal has its **own** model picker (labels like `claude-opu
 
 Two different things — agents mix them up. Pick the right one.
 
-- **Project main / timeline media** (the path(s) synced from the main VIDEO lane — **only workflows that expose main VIDEO import**, see **Main VIDEO import** above — e.g. `auto-edit` montage clips, clipping’s long source, `text-to-video` with **`imported`** source media): read `read_project_settings` → `ASSET_PATHS.main_video_asset_paths`, verify with **`file_exists`**. **`avatar`** / **`podcast`** templates do **not** use this lane in the shipped UI — do not treat `main_video_asset_paths` as required for Create Video there. **`advertisement`** center on **`ADVERTISEMENT.*` image paths**, not timeline video. There is **no** MCP tool that lists "the project's VIDEOS tab"; for clipping do not verify the source via `get_video_assets`.
+- **Project main / timeline media** (the path(s) synced from the main VIDEO lane — **only workflows that expose main VIDEO import**, see **Main VIDEO import** above — e.g. `auto-edit` montage clips, clipping’s long source, `text-to-video` with **`imported`** source media): read `read_project_settings` → `ASSET_PATHS.main_video_asset_paths`, verify with **`file_exists`**. **`avatar`** / **`podcast`** templates do **not** use this lane in the shipped UI — do not treat `main_video_asset_paths` as required for Create Video there. **`advertisement`** center on **`ADVERTISEMENT.*` image paths**, not timeline video. **`music-video`** has no main lane: its input is the song at **`MUSIC_VIDEO.music_video_audio_path`** — verify that path with **`file_exists`**, not `main_video_asset_paths`. There is **no** MCP tool that lists "the project's VIDEOS tab"; for clipping do not verify the source via `get_video_assets`.
 - **My Assets library tabs** (cross-project inventory; AI-generated outputs, imports, downloads): use the per-tab `get_*_assets` tools or filtered **`query_my_assets`** as described in `references/panel-workflows/README.md` → *Library and cross-cutting MCP tools*.
 
 ### Removing imported project assets (Your Library)
@@ -211,6 +216,7 @@ When the user asks to **remove**, **clear**, or **delete** something from the pr
      | `podcast` | script **> 10 chars** in `[Interviewer]`/`[Interviewee]` form **and BOTH** avatar images set |
      | `text-to-video` | script **≥ 50 chars** **or** saved speech audio; plus ≥1 imported main asset when `textToVideoSourceMedia` is `imported` |
      | `advertisement` | **at least one** of product image / character image (either alone is fine) |
+     | `music-video` | a song set (`MUSIC_VIDEO.music_video_audio_path` non-empty) **and** that file exists (`file_exists`) — without it the render stops (`music_video_no_song`) |
 
    - These mirror the renderer's own guards, so treat them as hard preconditions rather than
      advice. Re-read a setting after writing it when the render depends on it (`read_project_settings`).
@@ -252,7 +258,7 @@ When the user asks to **remove**, **clear**, or **delete** something from the pr
    - **Zero-balance exception — the free tier.** A signed-in user whose balance is effectively empty
      (under 10 credits) still gets **4 free renders per week** (resets Monday 00:00 UTC, no rollover)
      on **`auto-edit` and `clipping` only**. So a low balance is not automatically a blocker for those
-     two types — but it *is* for `text-to-video`, `avatar`, `podcast` and `advertisement`, which are
+     two types — but it *is* for `text-to-video`, `avatar`, `podcast`, `advertisement` and `music-video`, which are
      paid only. The lease is opened and settled by the Electron **main** process around every render,
      so an MCP-triggered `trigger_create_video` / `generate_video` is covered exactly like the in-app
      Create Video button. A failed, stopped, or empty render does **not** consume one of the 4.
@@ -329,7 +335,7 @@ note that names the extracted files — so a path is always what you act on.
   pass it (the 6–10 digit, usually 8-digit, value) to step 2. The Shorz desktop app must be running.
 
 ### Projects and Settings
-- `create_project`, `list_projects`, `delete_project`, `get_current_open_project`
+- `create_project` (`projectType`: `auto-edit` \| `clipping` \| `text-to-video` \| `avatar` \| `podcast` \| `advertisement` \| `music-video` — hyphenated; anything else is rejected), `list_projects`, `delete_project`, `get_current_open_project`
 - `read_project_settings`, `update_project_settings`
 - `set_user_instructions` (PromptBar creative brief), `set_main_ai_model` (PromptBar main LLM)
 - `switch_project_aspect_ratio` (directly updates `VIDEO_SIZE` width/height + optional fps)
@@ -345,6 +351,7 @@ note that names the extracted files — so a path is always what you act on.
   - `set_avatar_settings`
   - `set_podcast_settings`
   - `set_advertisement_settings`
+  - `set_music_video_settings`
   - `set_general_video_settings`
 - Panel styling and “looks” are applied only via granular `set_*_settings` (and project settings read/update); there are no MCP preset shortcut tools.
 
@@ -417,7 +424,7 @@ note that names the extracted files — so a path is always what you act on.
 - Workflow: **`references/headless-workflows/single-asset-edit.md`**. Chain edits by passing each `outputPath` as the next `inputPath`. Do not substitute Create Video or an `auto-edit` project for a simple trim/crop request.
 
 ### Editing an already rendered auto-edit video (text instruction → new version)
-- **`edit_generated_video { projectPath, videoPath, instruction }`** — one plain-language change to a video Create Video already produced ("cut 0:05-0:08", "swap the second and third clip", "remove the zoom near the start", "make the subtitles bigger", "add a zoom when I say launch", "turn the music down"). Interprets the instruction into validated operations on the video's saved render plan (`<video>.plan.json`, written by every auto-edit render) and REPLAYS the render with every other AI decision pinned — nothing else changes, generated b-roll/GIFs/images are reused, not re-billed. Produces a NEW versioned mp4 (the original stays), updates `last_generated_final_video_for_playback_mode`, and remembers the conversation per video. Async by default (poll `get_job_status`). `status`: `rendered` | `clarify` (answer the question with another call on the SAME `videoPath`) | `unsupported` | `failed` | `busy`. Videos rendered before this feature have no plan file → `unsupported`: create the video again first. Never use it to *create* a video, and never re-run `trigger_create_video` to "tweak" a finished one when this tool can.
+- **`edit_generated_video { projectPath, videoPath, instruction }`** — one plain-language change to a video Create Video already produced ("cut 0:05-0:08", "swap the second and third clip", "remove the zoom near the start", "make the subtitles bigger", "add a zoom when I say launch", "turn the music down"). Works on auto-edit videos and on text-to-video stories made from generated images or AI clips (scene edits: "give scene 3 a different picture", "change what scene 2 says to …", "remove scene 4", "use a deeper voice", "dissolve between every scene"). Interprets the instruction into validated operations on the video's saved render plan (`<video>.plan.json`, written by every such render) and REPLAYS the render with every other AI decision pinned — nothing else changes, generated b-roll/GIFs/images and a story's narration, pictures and clips are reused, not re-billed. Produces a NEW versioned mp4 (the original stays), updates `last_generated_final_video_for_playback_mode`, and remembers the conversation per video. Async by default (poll `get_job_status`). `status`: `rendered` | `clarify` (answer the question with another call on the SAME `videoPath`) | `unsupported` | `failed` | `busy`. Videos rendered before this feature have no plan file → `unsupported`: create the video again first. Never use it to *create* a video, and never re-run `trigger_create_video` to "tweak" a finished one when this tool can.
 - Workflow: **`references/project-workflows/edit-generated-video.md`**. The same editor exists in the app as the **Edit** pill over the PLAYBACK video.
 
 ### Headless project file pickers (local paths)
@@ -425,11 +432,22 @@ note that names the extracted files — so a path is always what you act on.
 - Avatar: `select_avatar_image`, `select_avatar_angle_image`, `select_avatar_audio` → `references/project-workflows/avatar.md`
 - Podcast avatars: `select_podcast_avatar_image` → `references/project-workflows/podcast.md`
 - Advertisement images: `select_advertisement_image`, `remove_advertisement_image` → `references/project-workflows/advertisement.md`
+- Music video song + artist image: `select_music_video_audio`, `remove_music_video_audio`, `select_music_video_character_image`, `remove_music_video_character_image` (take `filePath`, copy by path; `projectPath` defaults to the open music-video project) → `references/project-workflows/music-video.md`
 
 ### Overlay and Animation Studio
 - `get_overlay_effects`, `import_overlay_effects`, `delete_overlay_effect`
 - `get_animation_studio_exports`, `remove_animation_studio_export`,
   `clear_animation_studio_exports`
+
+### Canvas (node-graph video builder)
+- `canvas_list`, `canvas_get` — read canvases (free; opens nothing).
+- `canvas_build` — create a canvas or add to one from `{ name, nodes, edges }` (the Build with AI
+  JSON shape) plus `updates` for existing nodes. Strict and all-or-nothing; opens Canvas so the
+  user watches. Free.
+- `canvas_run` — runs only out-of-date nodes and returns the Export node's `outputPath`. **Two-step
+  spend:** a paid plan returns the estimate and runs nothing until you call again with
+  `maxCredits` ≥ the estimate — show the user that number first. Async: poll `get_job_status`.
+- Full contract, node catalog and examples: **`references/panel-workflows/canvas.md`**.
 
 ### Social Publishing
 - YouTube (native): `youtube_auth_status`, `youtube_auth_start`, `youtube_remove_account`,
@@ -478,7 +496,7 @@ The bridge records **every** `mainWindow.webContents.send(...)` from the Electro
   - API keys/license/update map to app/config tools where exposed over MCP. Opening external URLs (pricing, privacy, etc.) uses in-app IPC only, not MCP.
 - **Project manager modal**
   - Create/list/delete/open behavior maps to project tools.
-- **Panel option controls (Text-to-video, Avatar, Advertisement, Settings, Border, Text, Audio, B-roll)**
+- **Panel option controls (Text-to-video, Avatar, Advertisement, Music Video, Settings, Border, Text, Audio, B-roll)**
   - Prefer direct tools (`set_*_settings`) for panel-level updates.
   - Static options are now defined in MCP input schemas via enums (no separate "list options" tool needed for fixed values).
   - Dynamic values still come from listing tools, e.g. `list_elevenlabs_voices`, `get_available_fonts`, social auth/account tools.
@@ -493,6 +511,7 @@ The bridge records **every** `mainWindow.webContents.send(...)` from the Electro
     - `textToVideoImageMotion` / `textToVideoImageMotions`: `none`, `ai`, `zoom_out`, `zoom_in`, `zoom_in_left`, `zoom_in_right`, `zoom_in_top`, `zoom_in_bottom`, `random_zoom`, `rapid_zoom`, `pan_left`, `pan_right`, `pan_up`, `pan_down`, `handheld_camera`, `rotation`
     - `textToVideoImageModel`: `Nano Banana 2`, `GPT Image 2` (= GPT Image 2.5 Flare, fast), `GPT Image 2.5 Sunburst` (sharper, a few seconds slower, same 2 credits) (Nano Banana 2 Lite is not a TTV option — it stays for AI B-roll and standalone generate_images)
     - `textToVideoVideoModel`: `bytedance/seedance-2-0-mini` (the server catalog default for `text_to_video`, and the cheapest at ~9 cr/s @720p), `klingai/video-v3-standard-image-to-video` (3–15s clips, ~26 cr/s), `gemini-omni-flash-preview` (native Google route, token-billed ~12 cr/s), `bytedance/seedance-2-5` (premium: 4–30s in ONE generation, 480p/720p, ~27 cr/s), `bytedance/seedance-2-0`, `bytedance/seedance-2-0-fast`. **Do not assume a persisted default** — the on-disk value varies by how the project was created; read it with `read_project_settings` and set it explicitly with `set_text_to_video_settings`. **Retired, do not send:** `google/veo-3.1-i2v-fast` (rejected on write) and `custom:happyhorse-1.0` (**passes MCP validation**, but its catalog row is disabled, so the write succeeds and the render then fails at generation time)
+  - `set_music_video_settings` — `videoModel` / `imageModel` are **live catalog ids, not enums** (the `text_to_video` rows — the same models as Text-to-Video); an unknown or disabled id is rejected with the current list, and a new `videoModel` also stores its per-clip range. `cutPace`: `auto` | `relaxed` | `energetic`; `sectionTransitions`, `useFullSong` booleans; `rangeStartSec` / `rangeEndSec` seconds (`0` end = to the end of the song); `lipSync` boolean (a few AI-picked sung moments become close-ups lip-synced to the song) with `lipSyncModel` `Kling Avatar Pro` | `Kling Avatar` | `OmniHuman 1.5`. Full contract: `references/project-workflows/music-video.md`.
   - `set_text_to_video_settings` also accepts:
     - `textToVideoScript`: string
     - `textToVideoVoice`: string (typically an ElevenLabs voice id/name)

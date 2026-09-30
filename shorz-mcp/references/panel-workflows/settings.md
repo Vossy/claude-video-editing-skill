@@ -61,3 +61,4 @@ Arrays must be **non-empty**. Use `["None"]` alone for no overlay FX on that ram
 - **brightness**, **contrast**, **saturation** (0–2): out-of-range values are **rejected**, not clamped.
 - Out-of-range numeric values — **rejected** at MCP validation for zoom keys, freeze-frame, color tuning, and `videoSpeed` (`0.1..5`); fix the value using the tool error text.
 - Invalid enum names — use values accepted by the MCP schema or the tool error message.
+- **Music video projects** skip `freezeFrameEffect` and `grayscaleEffect` at render time — both hold or slow part of the video, which would stretch the song and pull the cuts off its beat; the toggles save but do nothing there. `Zoom on Music Beat` pulses to the song itself.

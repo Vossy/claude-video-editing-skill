@@ -3,7 +3,7 @@
 Two speakers on camera as animated avatar images, lip-synced to a `[Interviewer]` / `[Interviewee]` dialogue. Follow `README.md` protocol. Tool semantics: `references/project-workflows/podcast.md`.
 
 **Route here when:** "AI podcast", two-person dialogue video, interview video, host + guest, debate/Q&A between two people.
-**Route away:** one person to camera → `avatar`; narrated scenes with no faces → `text-to-video`; cutting an existing recording → `clipping`.
+**Route away:** one person to camera → `avatar`; narrated scenes with no faces → `text-to-video`; cutting an existing recording → `clipping`; visuals for a song → `music-video`.
 
 **Non-negotiables the wizard must enforce** (the UI does NOT block Create Video on them; the renderer hard-fails):
 - **BOTH avatar images are required** — interviewer AND interviewee, files must exist on disk.

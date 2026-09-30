@@ -3,7 +3,7 @@
 Script/idea → narrated video with AI-generated (or imported) visuals. The most branched flow: the **script comes first** (it sets the scene count and therefore the cost), then **Source Media is the root branch** that several later questions depend on. Follow `README.md` protocol. Tool semantics: `references/project-workflows/text-to-video.md`.
 
 **Route here when:** "make a video about X", "turn my script into a video", faceless video, storytime, documentary/explainer, "narrate my clips".
-**Route away:** general edit without narration → `auto-edit`; one talking head → `avatar`; two speakers → `podcast`; product ad → `advertisement`; a single image/clip asset only → standalone `generate_scene_image` / `generate_image_to_video`.
+**Route away:** general edit without narration → `auto-edit`; one talking head → `avatar`; two speakers → `podcast`; product ad → `advertisement`; visuals for a song (the song is the audio, cuts on the beat) → `music-video`; a single image/clip asset only → standalone `generate_scene_image` / `generate_image_to_video`.
 
 ## Question sequence
 

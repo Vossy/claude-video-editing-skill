@@ -40,7 +40,7 @@ When pitching ideas, use this structure:
 ```text
 Concept: [one line]
 Playbook: [name from this doc]
-Project type: [auto-edit | text-to-video | avatar | podcast | advertisement | clipping]
+Project type: [auto-edit | text-to-video | avatar | podcast | advertisement | clipping | music-video]
 Hook (on-screen + spoken): [first 2 seconds]
 Body: [what happens seconds 2–12]
 CTA: [comparison / curiosity / download]
@@ -292,6 +292,7 @@ Aspect: [9:16 default for TikTok/Reels — set via switch_project_aspect_ratio]
 | Two characters arguing or interviewing | `podcast` |
 | Narrated storyboard, scene-by-scene | `text-to-video` |
 | Extract shorts from long video | `clipping` |
+| Visuals for a song, cut on the beat | `music-video` |
 | Stitch / trim / loop without a project | Headless tools → **`../headless-workflows/single-asset-edit.md`** |
 
 ---

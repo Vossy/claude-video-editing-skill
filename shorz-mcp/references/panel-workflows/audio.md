@@ -18,7 +18,7 @@ In the **Audio** sidebar, the user sees **channel faders** for the main program 
 | Beat sync | **Not possible** — the track does not exist when the edit is planned | Supported in multi-asset `auto-edit` when the brief asks |
 | Volume | `musicVolume` applies to whichever source is playing | same |
 
-Both are mixed by the same renderer stage, so **`musicVolume` governs both**. Imported music is applied in **every** project type, not just `auto-edit`.
+Both are mixed by the same renderer stage, so **`musicVolume` governs both**. Imported music is applied in every project type, not just `auto-edit` — except **`music-video`**, whose song is the only audio (no MUSIC lane, no auto-music).
 
 **Music fades: setting = default, prompt = override.** `musicFadeIn` / `musicFadeOut` are the project's standing fade, applied to whichever music is playing (auto-music or imported). A fade in the brief (e.g. "fade the music out over the final 3 seconds") replaces them for that render — see the `musicFadeIn` / `musicFadeOut` row below.
 
@@ -85,6 +85,7 @@ Legacy flag ids (still accepted, normalized on save): `gb`→`en`, `sa`→`ar`, 
 - **Fade keys** — must be **finite** and in **0–30**; otherwise rejected. A stored fade is silently outranked by a fade in the brief, so if a user reports “my 5s fade became 2s”, check the PromptBar text before the settings.
 - **Invalid `dubbingLanguage` or `audioReverbEffect`** — use a string from the lists above **with exact spelling and casing** (e.g. `de`, `pt-BR` and `German` are valid; `DE`, `pt-br` and `german` are not). Errors include a hint; retry with a listed value.
 - **Wrong shape** — `projectPath` and `settings` must be top-level tool arguments.
+- **Music video projects** — auto-music, noise removal, dubbing and reverb are skipped at render time (the song is never re-mixed or processed); the toggles save but do nothing there. See `../project-workflows/music-video.md`.
 ## Audio Visualization (`set_audio_visualization_settings`)
 
 The Audio panel also has an **AUDIO VISUALIZATION** section: an audio-reactive overlay (bars, waveform, blob, ring, retro LED panel, vectorscope, …) rendered **on top of b-roll, subtitles, titles and emojis** (under the border) in the exported video, driven by the video's final speech + music mix. The user picks one style from preview cards, recolors it (white by default), and drags/resizes it in the editor preview. Costs no credits (local render effect). It is skipped at render time when the video has no audio track.

@@ -2,7 +2,7 @@
 
 These workflows operate on **local files or global app state** and do **not** require a Shorz project, `projectType`, `read_project_settings`, Create Video, or PromptBar.
 
-They are **separate from every project type** (`auto-edit`, `text-to-video`, `avatar`, `podcast`, `advertisement`, `clipping`). No `create_project` step, no `ASSET_PATHS` patch, and no `trigger_create_video` — unless the user later asks to import the result into a project.
+They are **separate from every project type** (`auto-edit`, `text-to-video`, `avatar`, `podcast`, `advertisement`, `clipping`, `music-video`). No `create_project` step, no `ASSET_PATHS` patch, and no `trigger_create_video` — unless the user later asks to import the result into a project.
 
 Global prerequisites (Shorz running, MCP connected, `file_exists` on input paths) live in **`../../SKILL.md`**.
 

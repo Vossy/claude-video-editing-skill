@@ -25,6 +25,7 @@ Every workflow file in this folder follows the same section order when applicabl
 - `title.md` — Title / headline (`set_title_settings`)
 - `thumbnail-creator.md` — Thumbnail Creator modal (`open_thumbnail_creator`, `set_thumbnail_creator_settings`, `thumbnail_creator_generate`, `get_thumbnail_creator_generation_status`, …)
 - `animation-studio.md` — Animation Studio (`animation_studio_*`, compile / export)
+- `canvas.md` — Canvas node-graph video builder (`canvas_list`, `canvas_get`, `canvas_build`, `canvas_run`); no project needed
 - `your-library-assets.md` — Your Library VIDEO / BROLL / SOUND / MUSIC — remove or clear imported project lanes (`ASSET_PATHS` via `update_project_settings`)
 
 ## Text panel routing (one sidebar, two MCP tools)
@@ -100,7 +101,7 @@ This is **not** the My Assets modal inventory — it is the **per-project** lane
 ### Imports and downloads
 
 - **`import_frontend_assets`** — Headless import: `assetType` must be one of `video`, `broll`, `sound`, `music`, `image`, `avatar`, `audio`; optional `overridePaths`. Library lanes persist to `ASSET_PATHS` and sync Your Library when the project is open.
-  - **`assetType: "video"`** (main timeline / **Import Main Assets**): Only where the **shipped UI** exposes that lane (**SKILL.md** → *Main VIDEO import* — e.g. `auto-edit`, `clipping`, `text-to-video` with **`imported`** source media). Headless imports into `avatar`/`podcast`/`advertisement` (or non-`imported` text-to-video) are **rejected with an error** — use `"broll"` there. For **`advertisement`**, default flow uses **`image`** + advertisement panel tools (`../project-workflows/advertisement.md`), not timeline video.
+  - **`assetType: "video"`** (main timeline / **Import Main Assets**): Only where the **shipped UI** exposes that lane (**SKILL.md** → *Main VIDEO import* — e.g. `auto-edit`, `clipping`, `text-to-video` with **`imported`** source media). Headless imports into `avatar`/`podcast`/`advertisement`/`music-video` (or non-`imported` text-to-video) are **rejected with an error** — use `"broll"` there. `music-video` also rejects `assetType: "music"`: its song is set with `select_music_video_audio` (`../project-workflows/music-video.md`). For **`advertisement`**, default flow uses **`image`** + advertisement panel tools (`../project-workflows/advertisement.md`), not timeline video.
 - **`download_social_video`** — `url` plus optional `platform`: `auto` \| `youtube` \| `tiktok` \| `facebook` \| `instagram` (same URL rules as the Clipping panel / My Assets download). **Async by default:** returns `started: true`, then poll **`get_social_video_download_status`** for `localFilePath` and metadata. `awaitCompletion: true` blocks instead, but YouTube extraction commonly exceeds the MCP request timeout — prefer the poll.
 - **`generate_images`** — Standalone AIML image generation **without** opening Thumbnail Creator or Avatar Creator; returns saved local paths under Shorz assets. Distinct from `thumbnail_creator_generate` (modal workflow); see `thumbnail-creator.md` vs generation needs. **`imageModel`:** **`gpt-image-2`** (default) \| **`nano-banana-2`** \| **`nano-banana-2-lite`** (cheaper/faster Nano variant — **never the default**; pass it explicitly). **`imageQuality`:** with **`gpt-image-2`** use **`low`** \| **`medium`** \| **`high`** (default **`medium`**); with **`nano-banana-2`** / **`nano-banana-2-lite`** use **`1k`** \| **`2k`** \| **`4k`** (default **`1k`**). Matches the Avatar Creator and Thumbnail Creator GPT Image 2.5 quality chips.
 - **`generate_scene_image`** — Standalone still via the **Python** text-to-video image stack (same models as `textToVideoImageModel`). Supports reference images (max 3), `aspectRatio` or explicit dimensions. Does not patch project settings.
@@ -110,7 +111,7 @@ This is **not** the My Assets modal inventory — it is the **per-project** lane
 ### Interactive vs headless image picking
 
 - **`select_local_image_for_import`** — **Opens an OS file dialog**; requires user interaction. Pass `options` (`{ title?: string; extensions?: string[] }`; extensions omit the leading `.`). Returns `{ success, filePath, fileName, canceled }` — use `filePath` with the headless `select_*` tools below.
-- **Project-scoped `select_*` tools** (e.g. `select_avatar_image`, `select_advertisement_image`) — **Headless**: pass absolute `imageFilePath`. Documented per workflow under `../project-workflows/avatar.md`, `podcast.md`, `advertisement.md`.
+- **Project-scoped `select_*` tools** (e.g. `select_avatar_image`, `select_advertisement_image`) — **Headless**: pass absolute `imageFilePath`. Documented per workflow under `../project-workflows/avatar.md`, `podcast.md`, `advertisement.md`. The music video tools (`select_music_video_audio`, `select_music_video_character_image`) take `filePath` instead and copy by path — `../project-workflows/music-video.md`.
 
 ### Path checks
 

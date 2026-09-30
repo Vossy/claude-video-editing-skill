@@ -3,7 +3,7 @@
 One long source video → 1–8 standalone short clips, chosen by AI from the transcript. Follow the shared protocol in `README.md`. Tool semantics: `references/project-workflows/clipping.md`.
 
 **Route here when:** "clip this youtube video", podcast/stream/webinar → shorts, "best moments", "highlights", "N clips from X".
-**Route away:** one montage from many files / filler-word or silence removal → `auto-edit`; no source video at all → `text-to-video`. Clipping picks time ranges only, and the source must contain audible speech.
+**Route away:** one montage from many files / filler-word or silence removal → `auto-edit`; no source video at all → `text-to-video` (or `music-video` when the input is a song). Clipping picks time ranges only, and the source must contain audible speech.
 
 ## Question sequence
 

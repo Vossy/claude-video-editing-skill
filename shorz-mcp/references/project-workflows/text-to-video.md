@@ -149,6 +149,8 @@ The PromptBar suggestions panel (textarea focused) has an **Example Styles** tab
    - `stop_video_generation` on user request.
 9. **Return outcome** — success/failure, generated output location(s), model/provider warnings.
 
+**After Create Video:** to change ONE thing in the finished story ("give scene 3 a different picture", "change what scene 2 says to …", "remove scene 4", "use a deeper voice", "make the subtitles bigger") use **`edit_generated_video`** — see **`edit-generated-video.md`** → *Text-to-Video stories*. It rebuilds the story from its saved scenes with only the named scenes generated again and every effect kept on its words, producing a new version. Do not edit the script and re-run `trigger_create_video` for that: any script change is a new cache key, so every picture and clip would be generated (and billed) again.
+
 **Re-rendering an unchanged project is free.** Script, voice, models, references and PromptBar text form a cache key; an exact match reuses the scene images, AI clips and narration from the previous run and skips every AI call (so it costs no credits and finishes in render time alone). The Generation Logs list each reused asset — `Cached scene image N/M`, `Cached scene video N/M`, `Cached narration audio N/M`, one preview per file — so the reused set is auditable. Change any keyed input and only the affected assets regenerate.
 
 ## Imported music

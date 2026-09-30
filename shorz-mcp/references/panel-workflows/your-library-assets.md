@@ -23,7 +23,7 @@ Trash on a card in this panel **only removes the asset from the project** (React
 
 The MUSIC generate panel has **Generate / History** tabs: History lists the tracks made by the in-app generator and by render-time auto-music (`auto_music_*` files in the app's `Generated_Audio` cache, named `auto_music_<prompt-slug>__<generation-id><ext>` — `.mp3` from ElevenLabs Music, `.wav` from Lyria 2, matching the bytes) and re-adds one to the project **for free**. Tracks fetched over MCP with `download_generated_music` are saved as `<timestamp>_<name>.mp3` and do **not** appear in that tab — check `get_audio_assets` before concluding a track doesn't exist. The MCP equivalent of a History re-add is `get_audio_assets` (filter names starting `auto_music_`) → `import_frontend_assets` with `assetType: "music"` **and `overridePaths: ["<absolute path>"]`** (without `overridePaths` the tool opens a native file dialog and hangs headless runs) — never re-generate a track the user already paid for.
 
-**VIDEO** is hidden or disabled for some `projectType`s (`avatar`, `podcast`, `advertisement`, `text-to-video` without `imported` source). Do not clear `main_video_asset_paths` when the UI would not show that tab — see **`../../SKILL.md`** → *Main VIDEO import*.
+**VIDEO** is hidden or disabled for some `projectType`s (`avatar`, `podcast`, `advertisement`, `music-video`, `text-to-video` without `imported` source). Do not clear `main_video_asset_paths` when the UI would not show that tab — see **`../../SKILL.md`** → *Main VIDEO import*. **MUSIC** is hidden in `music-video` projects: the song is the only audio and lives in `MUSIC_VIDEO.music_video_audio_path` (`select_music_video_audio`), not in a lane.
 
 ## Two different “delete” meanings
 
@@ -60,7 +60,7 @@ Paths are stored as a **single comma-separated string** per field (same as Pytho
 
 ## Import sequence (assign to project lanes)
 
-`import_frontend_assets` with `overridePaths` validates files, **persists to the open project's `ASSET_PATHS`**, and triggers UI refresh (same outcome as Your Library import). One call for library lanes (`video`, `broll`, `sound`, `music`, `audio`). **`video` is gated by project type**: headless imports into a project without the main VIDEOS lane (`avatar`, `podcast`, `advertisement`, `text-to-video` without `imported` source) are **rejected with an error** — use `broll` for supporting footage there.
+`import_frontend_assets` with `overridePaths` validates files, **persists to the open project's `ASSET_PATHS`**, and triggers UI refresh (same outcome as Your Library import). One call for library lanes (`video`, `broll`, `sound`, `music`, `audio`). **`video` is gated by project type**: headless imports into a project without the main VIDEOS lane (`avatar`, `podcast`, `advertisement`, `music-video`, `text-to-video` without `imported` source) are **rejected with an error** — use `broll` for supporting footage there. **`music` is rejected in `music-video` projects** (no MUSIC lane — set the song with `select_music_video_audio`).
 
 1. Confirm target project is open (`get_current_open_project`).
 2. `import_frontend_assets` — `assetType`: `video` | `broll` | `sound` | `music`; `overridePaths`: absolute paths from disk.

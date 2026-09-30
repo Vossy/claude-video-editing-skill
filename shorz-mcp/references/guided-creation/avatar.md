@@ -3,7 +3,7 @@
 One presenter, one face, lip-synced to speech; the generated avatar clip then runs through the normal auto-edit chain (subtitles, B-roll, music…) if enabled. Follow `README.md` protocol. Tool semantics: `references/project-workflows/avatar.md`.
 
 **Route here when:** talking head, AI presenter/spokesperson, UGC ad read, "make me say this", faceless channel WITH a host face, digital twin.
-**Route away:** two speakers / dialogue → `podcast`; no person on screen → `text-to-video`; product ad from product photos → `advertisement`; editing their own filmed footage → `auto-edit`.
+**Route away:** two speakers / dialogue → `podcast`; no person on screen → `text-to-video`; product ad from product photos → `advertisement`; editing their own filmed footage → `auto-edit`; visuals for a song (beat-cut scenes, not one lip-synced face) → `music-video`.
 
 **Order matters:** set the aspect ratio before generating the avatar image. The in-app Avatar Creator sizes its output from the project ratio (16:9→1536×1024, 9:16→1024×1536, 1:1→1024×1024); over MCP you pass `aspectRatio` per call, so there it is a quality safeguard rather than a hard dependency — a mismatched image is centre-cropped at render time.
 

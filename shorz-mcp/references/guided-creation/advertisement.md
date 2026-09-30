@@ -3,7 +3,7 @@
 Storyboard-driven ad built from reference stills: story-plan LLM → GPT Image 2.5 storyboard per scene → Gemini Omni 10-second clip per scene → concatenated. Follow `README.md` protocol. Tool semantics: `references/project-workflows/advertisement.md`.
 
 **Route here when:** "ad / promo / commercial for my product", UGC-style product ad, founder/brand story spot.
-**Route away:** one person talking to camera from a script with no product continuity → `avatar`; editing existing footage → `auto-edit`; long narrated explainer → `text-to-video`. Disambiguator for "UGC ad": product must appear consistently across scenes → advertisement; single talking head → avatar.
+**Route away:** one person talking to camera from a script with no product continuity → `avatar`; editing existing footage → `auto-edit`; long narrated explainer → `text-to-video`; visuals for a song with no product → `music-video`. Disambiguator for "UGC ad": product must appear consistently across scenes → advertisement; single talking head → avatar.
 
 **Never ask about:** the video model (locked to `gemini-omni-flash-preview` — the renderer forces it regardless of settings) or a voice (speech/ambience/SFX are generated natively inside each Omni clip — no TTS, no voice picker).
 

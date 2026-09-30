@@ -24,10 +24,11 @@ Anything the user DID already specify is **locked in** — never re-ask it. Skip
 | "talking head", "AI presenter/spokesperson", "avatar video" | `avatar` | `avatar.md` |
 | "podcast video", "two people talking", "interview video" | `podcast` | `podcast.md` |
 | "ad / advertisement / promo for my product" | `advertisement` | `advertisement.md` |
+| "music video for my song", "visualize this track", "AI visuals for my single" | `music-video` | `music-video.md` |
 
 If the type is ambiguous, ask ONE routing question first (≤4 grouped options + the automatic custom input), e.g.:
 1. **Clip or edit footage I already have** (Clipping / Auto Edit)
-2. **Generate a video from an idea or script** (Text-to-Video)
+2. **Generate a video from an idea, a script or a song** (Text-to-Video / Music Video)
 3. **AI presenter** — one host (Avatar) or two-person dialogue (Podcast)
 4. **Product advertisement** (Advertisement)
 
@@ -58,7 +59,7 @@ Two guided flows produce a **single asset**, not a project. They never call `cre
 
 These are the recurring failure modes, every one of them found in a real draft of these flows. Check a flow against all eleven before running it.
 
-1. **Aspect ratio before any AI image generation.** The Avatar Creator, the podcast speaker generator and the advertisement character generator all size their output from the *project* ratio. Ask the format question before any step that generates an image, or you hand the user a portrait built for the wrong frame.
+1. **Aspect ratio before any AI image generation.** The Avatar Creator, the podcast speaker generator and the advertisement and music video character generators all size their output from the *project* ratio. Ask the format question before any step that generates an image, or you hand the user a portrait built for the wrong frame.
 2. **Content before cost levers.** Anything that multiplies cost — scene count, clip count, avatar angles, a per-second video model — must be asked *after* we know how much content there is. Recommending "AI video clips" before seeing the script is a blind recommendation: the same option is cheap for a 30-second script and enormous for a 5-minute one. State the real implication at the moment of choosing — and make sure it is the one that actually dominates (see rule 9).
 3. **Never offer an option a prior answer made impossible.** A product-only ad has no character who can speak to camera; a photos-only slideshow has no speech to caption; split-view podcasts never cut, so transitions do nothing. Suppress the option instead of letting the user pick a no-op — and skip the whole question when every option would be one.
 4. **Recommendations adapt to known facts.** We probe `get_media_info` and we can count script sentences, so the default must move with them. Three clips is timid for a 90-minute podcast and aggressive for a 4-minute video. A static "(Recommended)" that ignores what we already know is a bug, not a default.
@@ -84,7 +85,7 @@ These are the recurring failure modes, every one of them found in a real draft o
 
 ## Execution contract (after "Yes")
 
-1. `get_shorz_credits` first. Paid-only types (`text-to-video`, `avatar`, `podcast`, `advertisement`) need balance; `auto-edit`/`clipping` may ride the free tier — follow SKILL.md free-tier rules (pin the free model, honour the source cap). Both asset flows are paid.
+1. `get_shorz_credits` first. Paid-only types (`text-to-video`, `avatar`, `podcast`, `advertisement`, `music-video`) need balance; `auto-edit`/`clipping` may ride the free tier — follow SKILL.md free-tier rules (pin the free model, honour the source cap). Both asset flows are paid.
 2. `create_project` with the flow's `projectType` (or resolve the chosen existing project). Asset flows skip this.
 3. Apply the answers via the mapping table at the bottom of the flow file (each answer → one MCP call/patch). Follow the matching `references/project-workflows/*.md` (or panel workflow) for tool semantics — the wizard decides *what*, the workflow file defines *how*.
 4. Import/download assets (async where documented — poll the documented status tool).
@@ -100,6 +101,7 @@ These are the recurring failure modes, every one of them found in a real draft o
 | `avatar.md` | Format → presenter → script/voice → angles → model → extras |
 | `podcast.md` | Dialogue → format → display type → speakers → voices → motion → quality |
 | `advertisement.md` | Mode → format → images → length → tone → delivery → extras |
+| `music-video.md` | Song → whole song or a part → format → concept → artist → models → pace + finishing |
 | `thumbnail-creator.md` | Format → subject → text → references → model → variations |
 | `animation-studio.md` | Kind → style → imports → output format → model |
 | `widgets.md` | Card-widget templates + fixed button phrases for image / model / voice steps |
