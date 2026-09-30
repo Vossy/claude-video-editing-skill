@@ -4,7 +4,7 @@ Use this when the user has a **finished Auto Edit video** or a **finished Text-t
 
 ## What it looks like
 
-Every Auto Edit render — and every Text-to-Video render made from generated images or AI clips — writes a **render plan** next to its mp4 (`<video>.plan.json` in the `Videos` cache folder): the cut plan (or, for a story, its scenes) with a timeline map, every effect analyzer's result with the media each placement produced, the music plan, the word transcript of the assembled clip and a full settings snapshot. An edit is **one LLM call** that turns the instruction into a short list of validated operations, applies them to that plan, then **replays the render with every other AI decision pinned** — no re-analysis, no re-planning, no effect analyzer runs, no regeneration of already generated b-roll / GIFs / web images / music. The result is a **new versioned mp4** (the previous one is kept in the playback thumbnail strip), the project's `ASSET_PATHS.last_generated_final_video_for_playback_mode` points at it, and the conversation is remembered **per video**, so a follow-up can say "no, the other one".
+Every Auto Edit render — and every Text-to-Video render made from generated images or AI clips — writes a **render plan** next to its mp4 (`<video>.plan.json` in the `Videos` cache folder): the cut plan (or, for a story, its scenes) with a timeline map, every effect analyzer's result with the media each placement produced, the music plan, the word transcript of the assembled clip and a full settings snapshot. An edit is **one LLM call** that turns the instruction into a short list of validated operations, applies them to that plan, then **replays the render with every other AI decision pinned** — no re-analysis, no re-planning, no effect analyzer runs, no regeneration of already generated b-roll / GIFs / web images / music. The result is a **new versioned mp4** (the previous one is kept; the playback rail shows one thumbnail per video with a version badge, and every version is in the editor's Versions row), the project's `ASSET_PATHS.last_generated_final_video_for_playback_mode` points at it, and the conversation is remembered **per video**, so a follow-up can say "no, the other one".
 
 ## Tool contract
 
@@ -20,7 +20,7 @@ Every Auto Edit render — and every Text-to-Video render made from generated im
 
 | `status` | Meaning | What to do |
 |---|---|---|
-| `rendered` | New version at `videoPath` (already the playback video). | Report `message` + `notes`; the user's thumbnail strip now has both versions. |
+| `rendered` | New version at `videoPath` (already the playback video). | Report `message` + `notes`; both versions are kept (the editor's Versions row lists them). |
 | `clarify` | The instruction was ambiguous; `message` is ONE question. | Ask the user (or answer yourself if obvious) and call again with the SAME `videoPath` — the thread is remembered. |
 | `unsupported` | Not doable here; `message` names the panel to use. | Route to that panel workflow (dubbing → audio panel, aspect ratio → `switch_project_aspect_ratio`, new footage → import + `trigger_create_video`). |
 | `failed` | The replay could not render; diagnostics are in `get_video_generation_status` / the log. | Do not loop; surface the message. |
@@ -54,6 +54,8 @@ A Text-to-Video plan is a list of **scenes**, one per narrated line: its narrati
 | New words | "change what scene 2 says to …", "fix the wording of the last scene" | that scene's narration, in the story's voice; its picture stays |
 | New scene | "add a scene after scene 3 that explains why it matters" | its narration + picture (+ clip); it borrows the cast of the scene before it |
 | Voice | "use a deeper voice", "narrate it with Rachel" | every scene's narration; every picture stays |
+| New take | "record the narration of scene 3 again", "scene 5 sounds off" | that scene's narration, same words and voice (a new seed); picture stays |
+| One scene's voice | "let Rachel read the last scene" | that scene's narration only; the story's narrator and every picture stay |
 | Order | "remove scene 5", "swap scenes 1 and 2", "move the last scene to the beginning", "cut 0:12-0:18" (removes the scenes it covers) | nothing |
 | Motion / transitions | "slow zoom in on scene 1", "pan left on scene 3", "dissolve between every scene", "no transitions" | nothing |
 | AI clip movement | "make the camera orbit the rocket in scene 3" (`generated_video` only) | that clip |
@@ -67,7 +69,7 @@ Rules of a story: a scene lasts exactly as long as its narration, so scenes are 
 - One change per call. "Cut the intro and make subtitles bigger" is fine (both are one instruction), but do not batch unrelated requests from different turns into one call.
 - `clarify` is a question, not an error: relay it, then call again with the answer on the **same `videoPath`**.
 - Never "fix" a finished video by re-running `trigger_create_video` with a changed brief when this tool can do it — a re-render re-plans everything and re-bills generated media.
-- Never delete the previous version to "clean up"; the user picks versions from the thumbnail strip.
+- Never delete the previous version to "clean up"; the user picks versions from the editor's Versions row.
 - Style changes persist to the panels (`settingsPatch`). Say so when it matters ("subtitles stay bigger for your next videos too").
 - Free tier: an Auto Edit edit spends one weekly free run, the interpreter call is zero-rated on that run; paid users (and every Text-to-Video edit) are billed for the interpreter call and any generation.
 
@@ -77,7 +79,7 @@ Rules of a story: a scene lasts exactly as long as its narration, so scenes are 
 2. Optional: `get_video_generation_status` → not generating.
 3. `edit_generated_video { projectPath, videoPath, instruction }` → `{ started, jobId }`.
 4. Poll `get_job_status { jobId }` every ~10–20 s until `completed`; read `result.status`.
-5. `rendered` → tell the user what changed (`message`, `notes`) and that the previous version is still in the thumbnail strip. `clarify` → relay the question, then repeat from 3 with the answer. `unsupported` → route to the named panel.
+5. `rendered` → tell the user what changed (`message`, `notes`) and that the previous version is still one click away in the editor's Versions row. `clarify` → relay the question, then repeat from 3 with the answer. `unsupported` → route to the named panel.
 
 ## Common failures
 
