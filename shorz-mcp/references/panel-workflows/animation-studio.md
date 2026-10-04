@@ -180,7 +180,7 @@ The lineup is **server-driven** (proxy catalog `main_ai` category — same list 
 | `GPT 6.1 Sol` | `openai/gpt-6-1-sol` (replaced GPT 6 Sol on 2026-09-30 by migration `0055` at the same price; `openai/gpt-6-sol` and the GPT 5.6 ids still resolve to it; 1 / 2 credits per 1k) |
 | `GPT 6 Luna` | `openai/gpt-6-luna` (added 2026-09-23 by migration `0052`; ~0.01 / 0.07 credits per 1k) |
 | `GPT 6 Astra` | `openai/gpt-6-astra` (added 2026-09-05 by migration `0042`; 2 / 7 credits per 1k, the priciest row) |
-| `Gemini 3.7 Flash` | `google/gemini-3.7-flash` (cheapest main-AI tier, ~0.2 / 1 credits per 1k tokens) |
+| `Gemini 3.8 Flash` | `google/gemini-3.8-flash` (cheapest main-AI tier, ~0.2 / 1 credits per 1k tokens) |
 
 - **`animation_studio_list_models`** — optional; returns the live catalog lineup (bundled snapshot when the catalog is unreachable — the snapshot matches the seven models above, but only the live catalog reflects server-side additions).
 - **Default model** when **`model`** is omitted: **`anthropic/claude-opus-5-5`**. Override only when asked.

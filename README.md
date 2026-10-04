@@ -6,7 +6,7 @@
 
 **An Agent Skill that teaches Claude to edit real video.** Install it once and Claude Code, Claude Desktop or Cursor can auto-edit footage, clip long videos into shorts, add subtitles, generate avatars and thumbnails, and publish to YouTube and TikTok — through the [free Shorz desktop app](https://www.shorz.ai/) and its built-in MCP server (180+ tools).
 
-**[Get Shorz — free →](https://www.shorz.ai/)** · [Full 181-tool catalog](https://github.com/Vossy/ai-video-agent) · [shorz.ai/tools/mcp](https://shorz.ai/tools/mcp)
+**[Get Shorz — free →](https://www.shorz.ai/)** · [Full 187-tool catalog](https://github.com/Vossy/ai-video-agent) · [shorz.ai/tools/mcp](https://shorz.ai/tools/mcp)
 
 </div>
 
@@ -31,7 +31,7 @@ This is the same bundle every Shorz install ships — kept here so Claude users 
 
 ## Install (2 minutes)
 
-**1. Get Shorz** — [free download](https://www.shorz.ai/), Windows (macOS in progress). The MCP server ships inside the app; no separate package, no API keys.
+**1. Get Shorz** — [free download](https://www.shorz.ai/), Windows and Mac (Apple Silicon). The MCP server ships inside the app; no separate package, no API keys.
 
 **2. Connect Claude** — easiest: open **Connect AI Agent** in the Shorz header and click your client; Shorz writes the config and installs this skill for you. Or by hand:
 
@@ -58,7 +58,7 @@ For Claude Desktop: Settings → Capabilities → Skills → upload the `shorz-m
 
 ## What can Claude actually do with it?
 
-Everything the Shorz app can — 181 MCP tools across projects, panels, generation, publishing and headless file edits. **162 of the 181 tools are free to run**; AI generation tools use prepaid Shorz credits (1 credit = €0.01, no subscription, credits never expire), and the skill teaches Claude to check prices before spending. The complete catalog with per-tool cost labels lives in the [ai-video-agent repo](https://github.com/Vossy/ai-video-agent).
+Everything the Shorz app can — 187 MCP tools across projects, panels, generation, publishing and headless file edits. **168 of the 187 tools are free to run**; AI generation tools use prepaid Shorz credits (1 credit = €0.01, no subscription, credits never expire), and the skill teaches Claude to check prices before spending. The complete catalog with per-tool cost labels lives in the [ai-video-agent repo](https://github.com/Vossy/ai-video-agent).
 
 The app itself is free to download, with a real free tier: Auto Edit and Clipping, 4 videos a week, no card — and no watermark on anything, ever.
 
@@ -74,7 +74,7 @@ Yes, that's the primary target — plus Claude Desktop, Cursor, Codex, Antigravi
 That's what powers this: the Shorz MCP server ships inside the free desktop app. This repo is the skill layer on top of it; the [full MCP tool catalog is here](https://github.com/Vossy/ai-video-agent).
 
 **What does it cost?**
-The app and this skill are free, and most tools (162/181) run at no cost. AI generation runs on prepaid credits — no subscription.
+The app and this skill are free, and most tools (168/187) run at no cost. AI generation runs on prepaid credits — no subscription.
 
 ---
 

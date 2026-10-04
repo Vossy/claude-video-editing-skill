@@ -96,7 +96,7 @@ Open **`references/creative-strategy/content-brainstorming.md`** when the user a
 | Text → headline / banner | `references/panel-workflows/title.md` | `set_title_settings` |
 | Thumbnail Creator (modal) | `references/panel-workflows/thumbnail-creator.md` | `open_thumbnail_creator`, `set_thumbnail_creator_settings`, `thumbnail_creator_generate`, `get_thumbnail_creator_generation_status` |
 | Animation Studio (modal) | `references/panel-workflows/animation-studio.md` | `animation_studio_*`, `compile_remotion_preview`, `remotion_render` |
-| Canvas (node-graph video builder, ⋮ → Canvas; no project) | `references/panel-workflows/canvas.md` | `canvas_list`, `canvas_get`, `canvas_build`, `canvas_run` (+ `get_job_status`) |
+| Canvas (node-graph video builder, ⋮ → Canvas; no project) | `references/panel-workflows/canvas.md` | `canvas_list`, `canvas_get`, `canvas_build`, `canvas_remove`, `canvas_run` (+ `get_job_status`), `canvas_stop`, `canvas_pick_take`, `canvas_duplicate`, `canvas_rename`, `canvas_delete` |
 | Your Library (VIDEO / BROLL / SOUND / MUSIC) | `references/panel-workflows/your-library-assets.md` | `update_project_settings` (`ASSET_PATHS`); `delete_asset` only when deleting files on disk |
 
 The **Text** sidebar shows subtitles and titles together but uses **two** tools with **two** key families (`subtitle*` vs `title*`). Never send subtitle keys to `set_title_settings` or vice versa — for both kinds, call each tool once with a minimal patch.
@@ -147,10 +147,10 @@ The PromptBar **model dropdown** (all project types) selects which AIML chat mod
 
 | MCP tool | Persistence | Allowed values |
 |---|---|---|
-| `set_main_ai_model` | `AI_MODEL.main_ai_model_name` | Server-driven — call **`list_main_ai_models`** for the live lineup and pass an id from its response. At time of writing: `anthropic/claude-opus-5-5` (Opus 5.5, default), `anthropic/claude-fable-5-1` (Fable 5.1), `anthropic/claude-sonnet-5-5` (Sonnet 5.5 — replaced Sonnet 5 on 2026-09-28 by migration `0054`, whose old id still resolves to it; 1 / 2 credits per 1k, the cheapest Claude), `openai/gpt-6-1-sol` (GPT 6.1 Sol — 1 / 2 credits per 1k; replaced GPT 6 Sol on 2026-09-30 at the same price, and `openai/gpt-6-sol` plus both old GPT 5.6 ids now silently serve 6.1 Sol), `openai/gpt-6-luna` (GPT 6 Luna, added 2026-09-23 — ~0.01 / 0.07 credits per 1k, the cheapest paid row), `openai/gpt-6-astra` (GPT 6 Astra, OpenAI's flagship, added 2026-09-05 — 2 / 7 credits per 1k, the priciest row; the proxy serves every GPT 6 model over OpenAI's Responses API, which is what lets Astra call function tools at all), `google/gemini-3.7-flash` (Gemini 3.7 Flash, ~0.2 / 1 credits per 1k tokens — much cheaper than Opus 5.5; a normal paid-selectable model billed like any other, **and** the only id a free run zero-rates) — seven models; treat that as a snapshot, not an allowlist. This model also drives image / video-frame asset analysis, including key-subject localization. **On a free-tier run** (`auto-edit` / `clipping`, zero-balance user) only `google/gemini-3.7-flash` is zero-rated — the in-app picker locks itself to it, but the MCP path does not, so **you** must `set_main_ai_model` (or pass `mainAiModelName`) with that id or the render bills and 402s |
+| `set_main_ai_model` | `AI_MODEL.main_ai_model_name` | Server-driven — call **`list_main_ai_models`** for the live lineup and pass an id from its response. At time of writing: `anthropic/claude-opus-5-5` (Opus 5.5, default), `anthropic/claude-fable-5-1` (Fable 5.1), `anthropic/claude-sonnet-5-5` (Sonnet 5.5 — replaced Sonnet 5 on 2026-09-28 by migration `0054`, whose old id still resolves to it; 1 / 2 credits per 1k, the cheapest Claude), `openai/gpt-6-1-sol` (GPT 6.1 Sol — 1 / 2 credits per 1k; replaced GPT 6 Sol on 2026-09-30 at the same price, and `openai/gpt-6-sol` plus both old GPT 5.6 ids now silently serve 6.1 Sol), `openai/gpt-6-luna` (GPT 6 Luna, added 2026-09-23 — ~0.01 / 0.07 credits per 1k, the cheapest paid row), `openai/gpt-6-astra` (GPT 6 Astra, OpenAI's flagship, added 2026-09-05 — 2 / 7 credits per 1k, the priciest row; the proxy serves every GPT 6 model over OpenAI's Responses API, which is what lets Astra call function tools at all), `google/gemini-3.8-flash` (Gemini 3.8 Flash, ~0.2 / 1 credits per 1k tokens — much cheaper than Opus 5.5; a normal paid-selectable model billed like any other, **and** the only id a free run zero-rates) — seven models; treat that as a snapshot, not an allowlist. This model also drives image / video-frame asset analysis, including key-subject localization. **On a free-tier run** (`auto-edit` / `clipping`, zero-balance user) only `google/gemini-3.8-flash` is zero-rated — the in-app picker locks itself to it, but the MCP path does not, so **you** must `set_main_ai_model` (or pass `mainAiModelName`) with that id or the render bills and 402s |
 
 - **Read current model:** `read_project_settings` → `AI_MODEL.main_ai_model_name`.
-- **Before Create Video:** When the user names Opus, Fable, GPT 6.1 Sol, GPT 6 Luna, GPT 6 Astra, Gemini 3.7 Flash, or a specific model id, call **`set_main_ai_model`** before **`trigger_create_video`** / **`generate_video`**, or pass **`mainAiModelName`** on **`trigger_create_video`** for a one-shot run (persists to disk first, matching the UI dropdown at generate time).
+- **Before Create Video:** When the user names Opus, Fable, GPT 6.1 Sol, GPT 6 Luna, GPT 6 Astra, Gemini 3.8 Flash, or a specific model id, call **`set_main_ai_model`** before **`trigger_create_video`** / **`generate_video`**, or pass **`mainAiModelName`** on **`trigger_create_video`** for a one-shot run (persists to disk first, matching the UI dropdown at generate time).
 - **Live UI:** Patches go through `update-project-settings`; the open app reloads the dropdown from disk (unlike PromptBar text, the model selector rarely races with in-memory UI state).
 
 ### Animation Studio chat model
@@ -162,7 +162,7 @@ The Animation Studio modal has its **own** model picker (labels like `claude-opu
 | `animation_studio_list_models` | Supported chat **`model`** ids for this build |
 | `animation_studio_send_*` optional **`model`** | Per-call override; default **`anthropic/claude-opus-5-5`** |
 
-**Allowed ids:** server-driven — `animation_studio_list_models` returns the live lineup (same `main_ai` catalog category as the PromptBar picker; at time of writing seven: Opus 5.5, Fable 5.1, Sonnet 5.5, GPT 6.1 Sol, GPT 6 Luna, GPT 6 Astra, Gemini 3.7 Flash). Call it and pass an id from the response rather than one from this page. **`anthropic/claude-opus-4-6`**, **`anthropic/claude-opus-4-7`** and **`anthropic/claude-opus-4-8`** are retired from the selector — use **`anthropic/claude-opus-5-5`** instead. (**`anthropic/claude-sonnet-5-5`** is the Sonnet in the selector since `0054` on 2026-09-28; `anthropic/claude-sonnet-5` still resolves to it through a disabled legacy-alias row.) (The proxy still resolves `anthropic/claude-opus-4-8` via a disabled legacy-alias catalog row so older saved projects keep working, but do not pass it for new work.) Full workflow: **`references/panel-workflows/animation-studio.md`** → *Model selection*.
+**Allowed ids:** server-driven — `animation_studio_list_models` returns the live lineup (same `main_ai` catalog category as the PromptBar picker; at time of writing seven: Opus 5.5, Fable 5.1, Sonnet 5.5, GPT 6.1 Sol, GPT 6 Luna, GPT 6 Astra, Gemini 3.8 Flash). Call it and pass an id from the response rather than one from this page. **`anthropic/claude-opus-4-6`**, **`anthropic/claude-opus-4-7`** and **`anthropic/claude-opus-4-8`** are retired from the selector — use **`anthropic/claude-opus-5-5`** instead. (**`anthropic/claude-sonnet-5-5`** is the Sonnet in the selector since `0054` on 2026-09-28; `anthropic/claude-sonnet-5` still resolves to it through a disabled legacy-alias row.) (The proxy still resolves `anthropic/claude-opus-4-8` via a disabled legacy-alias catalog row so older saved projects keep working, but do not pass it for new work.) Full workflow: **`references/panel-workflows/animation-studio.md`** → *Model selection*.
 
 ### Project targeting rules (apply to every **project** workflow)
 
@@ -266,10 +266,10 @@ When the user asks to **remove**, **clear**, or **delete** something from the pr
      never opens and every call bills as before — a 402 on a zero-balance `auto-edit` render means
      this build, or the kill switch, not a mistake on your side.)
    - **Two things the app does for its own UI but NOT for you — do them yourself before a free render:**
-     1. **Pin the model.** A free run zero-rates chat on **`google/gemini-3.7-flash`** and nothing else;
+     1. **Pin the model.** A free run zero-rates chat on **`google/gemini-3.8-flash`** and nothing else;
         any other model bills and 402s part-way through the render. The PromptBar pins it for
         button-started renders, but nothing pins it on the MCP path — call **`set_main_ai_model`** (or
-        pass `mainAiModelName` on `trigger_create_video`) with `google/gemini-3.7-flash` first.
+        pass `mainAiModelName` on `trigger_create_video`) with `google/gemini-3.8-flash` first.
      2. **Check the source length.** Free runs cap the source at **30 minutes**. The renderer sends the
         probed duration so the proxy can refuse before the render starts; the MCP bridge does not send
         it, so an over-long source is **not** refused up front — probe with `get_media_info` and honour
@@ -444,9 +444,17 @@ note that names the extracted files — so a path is always what you act on.
 - `canvas_build` — create a canvas or add to one from `{ name, nodes, edges }` (the Build with AI
   JSON shape) plus `updates` for existing nodes. Strict and all-or-nothing; opens Canvas so the
   user watches. Free.
+- `canvas_remove` — delete nodes (with their wires) and wires; `canvas_build`'s `remove` field does the
+  same inside one all-or-nothing edit, so rewiring is a single call.
 - `canvas_run` — runs only out-of-date nodes and returns the Export node's `outputPath`. **Two-step
   spend:** a paid plan returns the estimate and runs nothing until you call again with
   `maxCredits` ≥ the estimate — show the user that number first. Async: poll `get_job_status`.
+- `canvas_stop` — stop the running canvas (like the Stop button; in-flight generations finish and
+  are kept, the run's job ends with `stopped: true`). `canvas_rename`, `canvas_delete` (only when the
+  user asked; moves the file to `Canvas/.trash`, media stays). None of the three opens Canvas.
+- `canvas_pick_take` — choose a node's take (number, 1 = oldest, or id from `canvas_get` `takeList`);
+  downstream becomes out of date. `canvas_duplicate` — copy a canvas with every take (branching).
+  Neither opens Canvas.
 - Full contract, node catalog and examples: **`references/panel-workflows/canvas.md`**.
 
 ### Social Publishing

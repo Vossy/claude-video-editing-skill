@@ -75,7 +75,7 @@ Merge Q4 + Q6 into ONE brief and persist with `set_user_instructions` (never inc
 
 ## Summary + confirm
 
-Per `README.md` contract. Include: source, format, clip count, max length, subtitles, focus brief, model, and an honest cost line. Clipping is **free-tier eligible** (allowance and 30-min source cap are server-driven; the free model id comes off the free-run payload — currently `google/gemini-3.7-flash` — so read it rather than hardcoding it). On credits: one STT pass over the source + one clip-selection LLM call, **plus the per-clip effects chain multiplied by the clip count** (see Q3). The cutting itself is free; the effects on each clip are not.
+Per `README.md` contract. Include: source, format, clip count, max length, subtitles, focus brief, model, and an honest cost line. Clipping is **free-tier eligible** (allowance and 30-min source cap are server-driven; the free model id comes off the free-run payload — currently `google/gemini-3.8-flash` — so read it rather than hardcoding it). On credits: one STT pass over the source + one clip-selection LLM call, **plus the per-clip effects chain multiplied by the clip count** (see Q3). The cutting itself is free; the effects on each clip are not.
 
 ## Answer → execution map
 

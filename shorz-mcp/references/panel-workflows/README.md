@@ -25,7 +25,7 @@ Every workflow file in this folder follows the same section order when applicabl
 - `title.md` — Title / headline (`set_title_settings`)
 - `thumbnail-creator.md` — Thumbnail Creator modal (`open_thumbnail_creator`, `set_thumbnail_creator_settings`, `thumbnail_creator_generate`, `get_thumbnail_creator_generation_status`, …)
 - `animation-studio.md` — Animation Studio (`animation_studio_*`, compile / export)
-- `canvas.md` — Canvas node-graph video builder (`canvas_list`, `canvas_get`, `canvas_build`, `canvas_run`); no project needed
+- `canvas.md` — Canvas node-graph video builder (`canvas_list`, `canvas_get`, `canvas_build`, `canvas_remove`, `canvas_run`, `canvas_stop`, `canvas_pick_take`, `canvas_duplicate`, `canvas_rename`, `canvas_delete`); no project needed
 - `your-library-assets.md` — Your Library VIDEO / BROLL / SOUND / MUSIC — remove or clear imported project lanes (`ASSET_PATHS` via `update_project_settings`)
 
 ## Text panel routing (one sidebar, two MCP tools)
